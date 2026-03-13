@@ -68,6 +68,7 @@ public enum ConfigMessage {
     COMPETITION_TYPE_SPECIFIC_RARITY("{amount} <b>{rarity}</b> fish", PrefixType.NONE, "competition-types.specific-rarity"),
     COMPETITION_TYPE_SHORTEST("the shortest fish", PrefixType.NONE, "competition-types.shortest"),
     COMPETITION_TYPE_SHORTEST_TOTAL("the shortest total fish length", PrefixType.NONE, "competition-types.shortest-total"),
+    COMPETITION_TYPE_RAMPAGE("the rampage", PrefixType.NONE, "competition-types.rampage"),
 
     COMPETITION_SINGLE_WINNER("<white>{player} has won the competition for {type}. Congratulations!", PrefixType.DEFAULT, "single-winner"),
 

@@ -36,7 +36,8 @@ public class PlaceholderReceiver extends PlaceholderExpansion {
             CompetitionType.SPECIFIC_FISH, ConfigMessage.COMPETITION_TYPE_SPECIFIC,
             CompetitionType.SPECIFIC_RARITY, ConfigMessage.COMPETITION_TYPE_SPECIFIC_RARITY,
             CompetitionType.SHORTEST_FISH, ConfigMessage.COMPETITION_TYPE_SHORTEST,
-            CompetitionType.SHORTEST_TOTAL, ConfigMessage.COMPETITION_TYPE_SHORTEST_TOTAL
+            CompetitionType.SHORTEST_TOTAL, ConfigMessage.COMPETITION_TYPE_SHORTEST_TOTAL,
+            CompetitionType.RAMPAGE, ConfigMessage.COMPETITION_TYPE_RAMPAGE
     );
 
     private final EvenMoreFish plugin;

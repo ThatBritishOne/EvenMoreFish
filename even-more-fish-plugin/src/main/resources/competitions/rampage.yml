@@ -1,0 +1,21 @@
+id: rampageCompetition
+disabled: true
+type: RAMPAGE
+duration: 5
+times:
+  - 12:00
+bossbar-colour: RED
+bossbar-prefix: '<bold><red>RAMPAGE: '
+
+rewards:
+  '1':
+    - MESSAGE:<red>You survived the RAMPAGE and came 1st! You have received $3000!
+    - MONEY:3000
+  '2':
+    - MESSAGE:<red>You survived the RAMPAGE and came 2nd! You have received $1500!
+    - MONEY:1500
+  '3':
+    - MESSAGE:<yellow>You survived the RAMPAGE and came 3rd! You have received $500!
+    - MONEY:500
+  participation:
+    - MESSAGE:<yellow>Thanks for participating in the RAMPAGE competition!

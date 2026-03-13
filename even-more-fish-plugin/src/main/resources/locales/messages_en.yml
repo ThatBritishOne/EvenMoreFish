@@ -43,6 +43,8 @@ competition-types:
   specific: '{amount} <b>{rarity}</b> {fish}'
   # SPECIFIC_RARITY
   specific-rarity: '{amount} <b>{rarity}</b> fish'
+  # RAMPAGE
+  rampage: the rampage
 # Segments shown in the bossbar when competitions run
 bossbar:
   layout: '{prefix}{time-formatted} {remaining}'

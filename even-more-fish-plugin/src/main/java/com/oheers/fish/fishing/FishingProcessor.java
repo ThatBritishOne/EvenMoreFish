@@ -7,12 +7,14 @@ import com.oheers.fish.api.EMFFishEvent;
 import com.oheers.fish.api.events.EMFFishCaughtEvent;
 import com.oheers.fish.api.fishing.CatchType;
 import com.oheers.fish.competition.Competition;
+import com.oheers.fish.competition.CompetitionType;
 import com.oheers.fish.config.MainConfig;
 import com.oheers.fish.fishing.items.Fish;
 import com.oheers.fish.messages.ConfigMessage;
 import com.oheers.fish.permissions.UserPerms;
 import org.bukkit.Material;
 import org.bukkit.Tag;
+import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,6 +30,11 @@ import java.time.LocalDateTime;
 
 public class FishingProcessor extends Processor<PlayerFishEvent> implements Listener {
     private final EvenMoreFish plugin = EvenMoreFish.getInstance();
+    // 1 tick ~= 0.05 seconds. This is the fastest non-auto-catch timing.
+    private static final int RAMPAGE_MIN_WAIT_TICKS = 1;
+    private static final int RAMPAGE_MAX_WAIT_TICKS = 1;
+    private static final int RAMPAGE_MIN_LURE_TICKS = 1;
+    private static final int RAMPAGE_MAX_LURE_TICKS = 1;
 
     @Override
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -61,6 +68,15 @@ public class FishingProcessor extends Processor<PlayerFishEvent> implements List
                 ConfigMessage.NO_PERMISSION_FISHING.getMessage().send(event.getPlayer());
             }
             return;
+        }
+
+        if (event.getState() == PlayerFishEvent.State.FISHING) {
+            Competition active = Competition.getCurrentlyActive();
+            if (active != null && active.getCompetitionType() == CompetitionType.RAMPAGE) {
+                FishHook hook = event.getHook();
+                applyRampageHookTiming(hook);
+                plugin.debug("RAMPAGE: applied ~1s bite timing for %s".formatted(event.getPlayer().getName()));
+            }
         }
 
         if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH) {
@@ -97,6 +113,13 @@ public class FishingProcessor extends Processor<PlayerFishEvent> implements List
         }
 
         nonCustom.setItemStack(fish);
+    }
+
+    private void applyRampageHookTiming(@NotNull FishHook hook) {
+        hook.setMinWaitTime(RAMPAGE_MIN_WAIT_TICKS);
+        hook.setMaxWaitTime(RAMPAGE_MAX_WAIT_TICKS);
+        hook.setMinLureTime(RAMPAGE_MIN_LURE_TICKS);
+        hook.setMaxLureTime(RAMPAGE_MAX_LURE_TICKS);
     }
 
     @Override
