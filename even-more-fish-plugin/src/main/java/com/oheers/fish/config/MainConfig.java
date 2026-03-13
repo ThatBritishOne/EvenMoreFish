@@ -10,6 +10,7 @@ import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
 import net.kyori.adventure.bossbar.BossBar;
 import org.apache.commons.lang3.LocaleUtils;
 import org.bukkit.block.Biome;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,6 +42,7 @@ public class MainConfig extends ConfigBase {
 
     private Map<String, List<Biome>> biomeSets;
     private Map<String, Map<String, Double>> regionBoosts;
+    private Map<String, Double> sellPermissionMultipliers;
 
     public MainConfig() {
         super("config.yml", "config.yml", EvenMoreFish.getInstance(), true);
@@ -64,6 +66,7 @@ public class MainConfig extends ConfigBase {
 
         this.biomeSets = loadBiomeSets();
         this.regionBoosts = loadRegionBoosts();
+        this.sellPermissionMultipliers = loadSellPermissionMultipliers();
     }
 
     @Override
@@ -72,6 +75,7 @@ public class MainConfig extends ConfigBase {
 
         this.biomeSets = loadBiomeSets();
         this.regionBoosts = loadRegionBoosts();
+        this.sellPermissionMultipliers = loadSellPermissionMultipliers();
     }
 
     public static MainConfig getInstance() {
@@ -390,6 +394,69 @@ public class MainConfig extends ConfigBase {
 
     public boolean isRegionBoostsEnabled() {
         return regionBoosts != null && !regionBoosts.isEmpty();
+    }
+
+    private Map<String, Double> loadSellPermissionMultipliers() {
+        Section section = getConfig().getSection("selling.permission-multipliers");
+        if (section == null) {
+            EvenMoreFish.getInstance().debug("No selling.permission-multipliers section found in config.");
+            return Map.of();
+        }
+
+        Map<String, Double> multipliers = new HashMap<>();
+        // Top-level keys preserve literal dots, e.g. "sellfish.multiplier.1".
+        section.getKeys().forEach(key -> {
+            String permissionNode = String.valueOf(key);
+            Route keyRoute = Route.fromSingleKey(key);
+            Object value = section.get(keyRoute);
+
+            if (value instanceof Number number) {
+                addPermissionMultiplier(multipliers, permissionNode, number.doubleValue());
+                return;
+            }
+
+            // Also support nested style:
+            // permission-multipliers:
+            //   sellfish:
+            //     multiplier:
+            //       1: 1.1
+            Section nestedSection = section.getSection(keyRoute);
+            if (nestedSection == null) {
+                return;
+            }
+
+            nestedSection.getRouteMappedValues(true).forEach((nestedRoute, nestedValue) -> {
+                if (!(nestedValue instanceof Number number)) {
+                    return;
+                }
+                addPermissionMultiplier(multipliers, permissionNode + "." + nestedRoute.join('.'), number.doubleValue());
+            });
+        });
+
+        EvenMoreFish.getInstance().debug("Loaded sell permission multipliers: " + multipliers);
+        return Map.copyOf(multipliers);
+    }
+
+    private void addPermissionMultiplier(@NotNull Map<String, Double> multipliers, @NotNull String permissionNode, double multiplier) {
+        if (multiplier <= 0.0D) {
+            EvenMoreFish.getInstance().getLogger().warning("Ignoring invalid sell permission multiplier for '" + permissionNode + "'. Multiplier must be above 0.");
+            return;
+        }
+        multipliers.put(permissionNode, multiplier);
+    }
+
+    public double getSellPermissionMultiplier(@NotNull Player player) {
+        double highestMultiplier = 1.0D;
+        for (Map.Entry<String, Double> entry : sellPermissionMultipliers.entrySet()) {
+            boolean hasPermission = player.hasPermission(entry.getKey());
+            EvenMoreFish.getInstance().debug("Sell permission check: player=%s, node=%s, has=%s, multiplier=%.3f"
+                .formatted(player.getName(), entry.getKey(), hasPermission, entry.getValue()));
+            if (!hasPermission) {
+                continue;
+            }
+            highestMultiplier = Math.max(highestMultiplier, entry.getValue());
+        }
+        return highestMultiplier;
     }
 
     public boolean isEconomyEnabled(@NotNull EconomyType type) {

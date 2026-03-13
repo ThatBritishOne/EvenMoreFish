@@ -28,10 +28,10 @@ public class SellGui extends ConfigGui {
 
         Economy economy = Economy.getInstance();
 
-        double shopSaleValue = SellHelper.calculateInventoryWorth(this.fishInventory);
+        double shopSaleValue = SellHelper.calculateInventoryWorth(this.fishInventory, player);
         addReplacement("{sell-price}", economy.getWorthFormat(shopSaleValue, true));
 
-        double playerSaleValue = SellHelper.calculateInventoryWorth(player.getInventory());
+        double playerSaleValue = SellHelper.calculateInventoryWorth(player.getInventory(), player);
         addReplacement("{sell-all-price}", economy.getWorthFormat(playerSaleValue, true));
 
         setCloseAction(close -> {

@@ -123,6 +123,14 @@ sell-gui:
   # Should the items be dropped(false) or sold(true) when a player exits an inventory?
   sell-over-drop: false
 
+# Optional permission-based sell multipliers.
+# The highest multiplier from permissions the player has will be used.
+# Example: sellfish.multiplier.1 = 10% bonus, sellfish.multiplier.2 = 20% bonus.
+selling:
+  permission-multipliers:
+    sellfish.multiplier.1: 1.1
+    sellfish.multiplier.2: 1.2
+
 # Uncomment the below section to enable these feature. They sett the plugin to only give custom fish when users are
 # in a list of set defined regions (this requires the worldguard/redprotect plugin) and/or in a list of set defined
 # worlds. EvenMoreFish automatically detects your protection plugin so it's important you don't run both at once.
