@@ -38,6 +38,17 @@ import java.util.stream.Stream;
  */
 public class PlaceholderReceiver extends PlaceholderExpansion {
 
+    private static final Map<CompetitionType, ConfigMessage> COMPETITION_TYPE_MESSAGES = Map.of(
+            CompetitionType.LARGEST_FISH, ConfigMessage.COMPETITION_TYPE_LARGEST,
+            CompetitionType.LARGEST_TOTAL, ConfigMessage.COMPETITION_TYPE_LARGEST_TOTAL,
+            CompetitionType.MOST_FISH, ConfigMessage.COMPETITION_TYPE_MOST,
+            CompetitionType.SPECIFIC_FISH, ConfigMessage.COMPETITION_TYPE_SPECIFIC,
+            CompetitionType.SPECIFIC_RARITY, ConfigMessage.COMPETITION_TYPE_SPECIFIC_RARITY,
+            CompetitionType.SHORTEST_FISH, ConfigMessage.COMPETITION_TYPE_SHORTEST,
+            CompetitionType.SHORTEST_TOTAL, ConfigMessage.COMPETITION_TYPE_SHORTEST_TOTAL,
+            CompetitionType.RAMPAGE, ConfigMessage.COMPETITION_TYPE_RAMPAGE
+    );
+
     private final EvenMoreFish plugin;
     private final List<EMFPlaceholder> handlers;
 

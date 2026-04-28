@@ -8,6 +8,7 @@ import com.oheers.fish.database.Database;
 import com.oheers.fish.database.DatabaseUtil;
 import com.oheers.fish.database.data.manager.DataManager;
 import com.oheers.fish.database.model.user.UserReport;
+import com.oheers.fish.config.MainConfig;
 import com.oheers.fish.messages.ConfigMessage;
 import com.oheers.fish.messages.abstracted.EMFMessage;
 import de.themoep.inventorygui.GuiStorageElement;
@@ -49,14 +50,14 @@ public class SellHelper {
     public SellHelper(@NotNull Inventory inventory, @NotNull Player player, boolean removeFromInventory) {
         this.player = player;
         this.fish = fetchFish(inventory, removeFromInventory);
-        this.saleValue = fish.stream().mapToDouble(SoldFish::getTotalValue).sum();
+        this.saleValue = applySellPermissionMultiplier(player, fish.stream().mapToDouble(SoldFish::getTotalValue).sum());
         this.count = fish.stream().mapToInt(SoldFish::getAmount).sum();
     }
 
     public SellHelper(@Nullable ItemStack @NotNull[] itemStacks, @NotNull Player player, boolean removeStacks) {
         this.player = player;
         this.fish = fetchFish(itemStacks, removeStacks);
-        this.saleValue = fish.stream().mapToDouble(SoldFish::getTotalValue).sum();
+        this.saleValue = applySellPermissionMultiplier(player, fish.stream().mapToDouble(SoldFish::getTotalValue).sum());
         this.count = fish.stream().mapToInt(SoldFish::getAmount).sum();
     }
 
@@ -218,6 +219,19 @@ public class SellHelper {
 
     public static double calculateInventoryWorth(@NotNull Inventory inventory) {
         return fetchFish(inventory, false).stream().mapToDouble(SoldFish::getTotalValue).sum();
+    }
+
+    public static double calculateInventoryWorth(@NotNull Inventory inventory, @NotNull Player player) {
+        double baseWorth = calculateInventoryWorth(inventory);
+        return applySellPermissionMultiplier(player, baseWorth);
+    }
+
+    private static double applySellPermissionMultiplier(@NotNull Player player, double baseWorth) {
+        double permissionMultiplier = MainConfig.getInstance().getSellPermissionMultiplier(player);
+        double finalWorth = baseWorth * permissionMultiplier;
+        EvenMoreFish.getInstance().debug("Sell multiplier debug: player=%s, baseWorth=%.2f, permissionMultiplier=%.3f, finalWorth=%.2f"
+            .formatted(player.getName(), baseWorth, permissionMultiplier, finalWorth));
+        return finalWorth;
     }
 
 }

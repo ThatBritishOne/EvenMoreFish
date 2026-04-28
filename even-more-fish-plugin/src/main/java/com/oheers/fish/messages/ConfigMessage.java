@@ -43,48 +43,59 @@ public enum ConfigMessage {
     BAIT_INVALID_ROD(PrefixType.ERROR, "bait-invalid-rod"),
 
     // Bait Shop
-    BAIT_PURCHASED(PrefixType.DEFAULT, "bait-purchased"),
-    BAIT_CONFIRM_PURCHASE(PrefixType.DEFAULT, "bait-confirm-purchase"),
-    BAIT_CANNOT_AFFORD(PrefixType.ERROR, "bait-cannot-afford"),
-    BAIT_NOT_FOR_SALE(PrefixType.ERROR, "bait-not-for-sale"),
+    BAIT_PURCHASED("<white>You have purchased {amount}x {bait} for {price}.", PrefixType.DEFAULT, "bait-purchased"),
+    BAIT_CONFIRM_PURCHASE("<white>Click again within 5 seconds to confirm bait purchase.", PrefixType.DEFAULT, "bait-confirm-purchase"),
+    BAIT_CANNOT_AFFORD("<white>You cannot afford to purchase that bait. You need {price}.", PrefixType.ERROR, "bait-cannot-afford"),
+    BAIT_NOT_FOR_SALE("<white>That bait is not for sale.", PrefixType.ERROR, "bait-not-for-sale"),
 
-    BAR_LAYOUT(PrefixType.NONE, "bossbar.layout"),
-    BAR_REMAINING(PrefixType.NONE, "bossbar.remaining"),
+    BAR_LAYOUT("{prefix}{time-formatted} {remaining}", PrefixType.NONE, "bossbar.layout"),
+    BAR_REMAINING("left", PrefixType.NONE, "bossbar.remaining"),
 
-    DURATION_SECOND(PrefixType.NONE, "duration.second"),
-    DURATION_MINUTE(PrefixType.NONE, "duration.minute"),
-    DURATION_HOUR(PrefixType.NONE, "duration.hour"),
-    DURATION_DAY(PrefixType.NONE, "duration.day"),
+    DURATION_SECOND("<white>{second}s", PrefixType.NONE, "duration.second"),
+    DURATION_MINUTE("<white>{minute}m", PrefixType.NONE, "duration.minute"),
+    DURATION_HOUR("<white>{hour}h", PrefixType.NONE, "duration.hour"),
+    DURATION_DAY("<white>{day}d", PrefixType.NONE, "duration.day"),
 
-    COMPETITION_ALREADY_RUNNING(PrefixType.ADMIN, "admin.competition-already-running"),
+    COMPETITION_ALREADY_RUNNING("<white>There's already a competition running.", PrefixType.ADMIN, "admin.competition-already-running"),
 
-    COMPETITION_END(PrefixType.DEFAULT, "contest-end"),
-    COMPETITION_JOIN(PrefixType.DEFAULT, "contest-join"),
-    COMPETITION_START(PrefixType.DEFAULT, "contest-start"),
+    COMPETITION_END("<white>The fishing contest has ended.", PrefixType.DEFAULT, "contest-end"),
+    COMPETITION_JOIN("<white>A fishing contest for {type} is going on.", PrefixType.DEFAULT, "contest-join"),
+    COMPETITION_START("<white>A fishing contest for {type} has started.", PrefixType.DEFAULT, "contest-start"),
 
-    COMPETITION_TYPE_LARGEST(PrefixType.NONE, "competition-types.largest"),
-    COMPETITION_TYPE_LARGEST_TOTAL(PrefixType.NONE, "competition-types.largest-total"),
-    COMPETITION_TYPE_MOST(PrefixType.NONE, "competition-types.most"),
-    COMPETITION_TYPE_SPECIFIC(PrefixType.NONE, "competition-types.specific"),
-    COMPETITION_TYPE_SPECIFIC_RARITY(PrefixType.NONE, "competition-types.specific-rarity"),
-    COMPETITION_TYPE_SHORTEST(PrefixType.NONE, "competition-types.shortest"),
-    COMPETITION_TYPE_SHORTEST_TOTAL(PrefixType.NONE, "competition-types.shortest-total"),
+    COMPETITION_TYPE_LARGEST("the largest fish", PrefixType.NONE, "competition-types.largest"),
+    COMPETITION_TYPE_LARGEST_TOTAL("the largest total fish length", PrefixType.NONE, "competition-types.largest-total"),
+    COMPETITION_TYPE_MOST("the most fish", PrefixType.NONE, "competition-types.most"),
+    COMPETITION_TYPE_SPECIFIC("{amount} <b>{rarity}</b> {fish}", PrefixType.NONE, "competition-types.specific"),
+    COMPETITION_TYPE_SPECIFIC_RARITY("{amount} <b>{rarity}</b> fish", PrefixType.NONE, "competition-types.specific-rarity"),
+    COMPETITION_TYPE_SHORTEST("the shortest fish", PrefixType.NONE, "competition-types.shortest"),
+    COMPETITION_TYPE_SHORTEST_TOTAL("the shortest total fish length", PrefixType.NONE, "competition-types.shortest-total"),
+    COMPETITION_TYPE_RAMPAGE("the rampage", PrefixType.NONE, "competition-types.rampage"),
 
-    COMPETITION_SINGLE_WINNER(PrefixType.DEFAULT, "leaderboard.single-winner"),
+    COMPETITION_SINGLE_WINNER("<white>{player} has won the competition for {type}. Congratulations!", PrefixType.DEFAULT, "single-winner"),
 
 
 
-    ECONOMY_DISABLED(PrefixType.ERROR, "admin.economy-disabled"),
+    ECONOMY_DISABLED("<white>EvenMoreFish's economy features are disabled.", PrefixType.ERROR, "admin.economy-disabled"),
 
-    FISH_CAUGHT(PrefixType.NONE, "fish-caught"),
-    FISH_LENGTHLESS_CAUGHT(PrefixType.NONE, "lengthless-fish-caught"),
-    FISH_HUNTED(PrefixType.NONE, "fish-hunted"),
-    FISH_LENGTHLESS_HUNTED(PrefixType.NONE, "lengthless-fish-hunted"),
-    FISH_LORE(PrefixType.NONE, "fish-lore"),
-    FISHERMAN_LORE(PrefixType.NONE, "fisherman-lore"),
-    LENGTH_LORE(PrefixType.NONE, "length-lore"),
-    FISH_SALE(PrefixType.DEFAULT, "fish-sale"),
-    NO_SELLABLE_FISH(PrefixType.ERROR, "no-sellable-fish"),
+    FISH_CAUGHT("<white><b>{player}</b> has fished a {length}cm <b>{rarity}</b> {fish}!", PrefixType.NONE, "fish-caught"),
+    FISH_LENGTHLESS_CAUGHT("<white><b>{player}</b> has fished a <b>{rarity}</b> {fish}!", PrefixType.NONE, "lengthless-fish-caught"),
+    FISH_HUNTED("<white><b>{player}</b> has hunted a {length}cm <bold>{rarity}</bold> {fish}!", PrefixType.NONE, "fish-hunted"),
+    FISH_LENGTHLESS_HUNTED("<white><b>{player}</b> has hunted a <bold>{rarity}</bold> {fish}!", PrefixType.NONE, "lengthless-fish-hunted"),
+    FISH_LORE(Arrays.asList(
+            "{fisherman_lore}",
+            "{length_lore}",
+            "",
+            "{fish_lore}",
+            "<b>{rarity}</b>"
+    ), PrefixType.NONE, "fish-lore"),
+    FISHERMAN_LORE(Collections.singletonList(
+            "<white>Caught by {player}"
+    ), PrefixType.NONE, "fisherman-lore"),
+    LENGTH_LORE(Collections.singletonList(
+            "<white>Measures {length}cm"
+    ), PrefixType.NONE, "length-lore"),
+    FISH_SALE("<white>You've sold <green>{amount} <white>fish for <green>{sell-price}<white>.", PrefixType.DEFAULT, "fish-sale"),
+    NO_SELLABLE_FISH("<white>You have nothing to sell!", PrefixType.ERROR, "no-sellable-fish"),
     HELP_FORMAT(
         PrefixType.DEFAULT,
         "help-format"

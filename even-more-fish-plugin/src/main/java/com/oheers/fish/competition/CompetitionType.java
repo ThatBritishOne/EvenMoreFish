@@ -3,6 +3,7 @@ package com.oheers.fish.competition;
 import com.oheers.fish.competition.strategies.LargestFishStrategy;
 import com.oheers.fish.competition.strategies.LargestTotalStrategy;
 import com.oheers.fish.competition.strategies.MostFishStrategy;
+import com.oheers.fish.competition.strategies.RampageStrategy;
 import com.oheers.fish.competition.strategies.RandomStrategy;
 import com.oheers.fish.competition.strategies.ShortestFishStrategy;
 import com.oheers.fish.competition.strategies.ShortestTotalStrategy;
@@ -61,6 +62,12 @@ public enum CompetitionType {
             "Shortest Total",
             true,
             new ShortestTotalStrategy()
+    ),
+    RAMPAGE(
+            ConfigMessage.COMPETITION_TYPE_RAMPAGE,
+            "Rampage",
+            false,
+            new RampageStrategy()
     );
 
     private final ConfigMessage typeVariable;
