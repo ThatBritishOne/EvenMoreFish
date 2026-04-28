@@ -2,7 +2,6 @@ package com.oheers.fish.fishing;
 
 
 import com.oheers.fish.EvenMoreFish;
-import com.oheers.fish.api.EMFFishEvent;
 import com.oheers.fish.api.events.EMFFishCaughtEvent;
 import com.oheers.fish.api.events.EMFFishHuntEvent;
 import com.oheers.fish.competition.Competition;
@@ -88,14 +87,18 @@ public class EMFFishListener implements Listener {
                 () -> FishStats.empty(fish,LocalDateTime.now())
         );
 
-        if (stats.getLongestLength() < fish.getLength()) {
-            stats.setLongestLength(fish.getLength());
-            stats.setLongestFisher(fish.getFisherman());
-        }
+        UUID fishermanUuid = fish.getFishermanUUID();
+        float length = fish.getLength();
+        if (fishermanUuid != null) {
+            if (stats.getLongestLength() < length) {
+                stats.setLongestLength(length);
+                stats.setLongestFisher(fishermanUuid);
+            }
 
-        if (stats.getShortestLength() > fish.getLength()) {
-            stats.setShortestLength(fish.getLength());
-            stats.setShortestFisher(fish.getFisherman());
+            if (stats.getShortestLength() > length) {
+                stats.setShortestLength(length);
+                stats.setShortestFisher(fishermanUuid);
+            }
         }
 
         stats.incrementQuantity();

@@ -7,22 +7,18 @@ import com.oheers.fish.competition.configs.CompetitionConversions;
 import com.oheers.fish.competition.configs.CompetitionFile;
 import com.oheers.fish.fishing.rods.RodManager;
 import com.oheers.fish.utils.TimeCode;
-import org.enginehub.linbus.stream.token.LinToken;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.TimeZone;
+import java.util.Optional;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class CompetitionQueue extends AbstractFileBasedManager<CompetitionFile> {
 
@@ -57,7 +53,7 @@ public class CompetitionQueue extends AbstractFileBasedManager<CompetitionFile> 
             }
             EvenMoreFish.getInstance().debug(
                     Level.WARNING,
-                    file.getFile().getName() + "'s timings are not configured properly. " +
+                Optional.ofNullable(file.getFile()).map(File::getName).orElse("Competition") + "'s timings are not configured properly. " +
                             "This competition will never automatically start."
             );
         });
@@ -124,26 +120,24 @@ public class CompetitionQueue extends AbstractFileBasedManager<CompetitionFile> 
 
     public TimeCode getNextCompetition() {
         TimeCode now = TimeCode.now();
-        if (competitions.containsKey(now)) {
-            return now;
-        }
-
-        competitions.put(now, null);
-        TimeCode nextCode = findNextCode(now);
-        competitions.remove(now);
-
-        return nextCode;
+        TimeCode next = competitions.ceilingKey(now);
+        return next == null ? competitions.firstKey() : next;
     }
 
-    private TimeCode findNextCode(@NotNull TimeCode now) {
-        List<TimeCode> timeCodes = new ArrayList<>(competitions.keySet());
-        int position = timeCodes.indexOf(now);
+    public boolean hasTimings() {
+        return !competitions.isEmpty();
+    }
 
-        if (position == competitions.size() - 1) {
-            return timeCodes.get(0);
+    public @Nullable CompetitionFile getFileFromId(@Nullable String id) {
+        if (id == null) {
+            return null;
         }
-
-        return timeCodes.get(position + 1);
+        for (CompetitionFile file : competitions.values()) {
+            if (file.getId().equalsIgnoreCase(id)) {
+                return file;
+            }
+        }
+        return null;
     }
 
 }

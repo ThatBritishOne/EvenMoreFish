@@ -4,6 +4,7 @@ import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
+import com.oheers.fish.api.Logging;
 import com.oheers.fish.api.registry.EMFRegistry;
 import com.oheers.fish.config.MainConfig;
 import com.oheers.fish.exceptions.InvalidFishException;
@@ -14,7 +15,6 @@ import com.oheers.fish.messages.EMFSingleMessage;
 import com.oheers.fish.messages.abstracted.EMFMessage;
 import com.oheers.fish.utils.DurationFormatter;
 import com.oheers.fish.utils.ItemUtils;
-import com.oheers.fish.api.Logging;
 import com.oheers.fish.utils.nbt.NbtKeys;
 import com.oheers.fish.utils.nbt.NbtUtils;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -25,6 +25,7 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
 import de.tr7zw.changeme.nbtapi.NBT;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
@@ -32,7 +33,6 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Registry;
-import net.kyori.adventure.sound.Sound;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Skull;
 import org.bukkit.boss.BarStyle;
@@ -63,12 +63,12 @@ import java.util.concurrent.TimeUnit;
 public class FishUtils {
 
     private static final DurationFormatter durationFormatter = new DurationFormatter(TimeUnit.SECONDS);
-    private static final UUID B64_SKULL_UUID = UUID.fromString("07cd5534-e542-4fbf-861c-67a144ecf776");
+    public static final UUID B64_SKULL_UUID = UUID.fromString("07cd5534-e542-4fbf-861c-67a144ecf776");
 
     // Enums in 1.20.1 API that are not enums in modern versions.
     // Used in getEnumValue and will throw if any of these match.
-    private static final List<Class<?>> BAD_ENUMS = List.of(
-        Sound.class
+    private static final List<Class<? extends Enum<?>>> BAD_ENUMS = List.of(
+        org.bukkit.Sound.class
     );
 
     private FishUtils() {
@@ -125,7 +125,7 @@ public class FishUtils {
             try {
                 fish.setFisherman(UUID.fromString(playerString));
             } catch (IllegalArgumentException exception) {
-                fish.setFisherman(null);
+                fish.setFisherman((OfflinePlayer) null);
             }
         }
         return fish;
@@ -165,24 +165,23 @@ public class FishUtils {
             try {
                 fish.setFisherman(UUID.fromString(playerString));
             } catch (IllegalArgumentException exception) {
-                fish.setFisherman(null);
+                fish.setFisherman((OfflinePlayer) null);
             }
         } else if (fisher != null) {
-            fish.setFisherman(fisher.getUniqueId());
+            fish.setFisherman(fisher);
         }
 
         return fish;
     }
 
-    public static void giveItems(@NotNull List<ItemStack> items, @NotNull Player player) {
+    public static void giveItems(@NotNull List<@Nullable ItemStack> items, @NotNull Player player) {
         if (items.isEmpty()) {
             return; // Early return if the list is null or empty
         }
 
-        // Remove null items and avoid modifying the original list
         List<ItemStack> filteredItems = items.stream()
-                .filter(Objects::nonNull)
-                .toList();
+            .filter(Objects::nonNull)
+            .toList();
 
         // Do not proceed if there are no valid items to give
         if (filteredItems.isEmpty()) {
@@ -193,14 +192,14 @@ public class FishUtils {
         player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.5f);
 
         // Add items to the player's inventory
-        Map<Integer, ItemStack> leftoverItems = player.getInventory().addItem(filteredItems.toArray(new ItemStack[0]));
+        Map<Integer, ItemStack> leftoverItems = player.getInventory().addItem(filteredItems.toArray(ItemStack[]::new));
 
         // Drop any leftover items in the world
         leftoverItems.values().forEach(item -> player.getWorld().dropItem(player.getLocation(), item));
     }
 
 
-    public static void giveItems(@NotNull ItemStack[] items, @NotNull Player player) {
+    public static void giveItems(@Nullable ItemStack @NotNull [] items, @NotNull Player player) {
         giveItems(Arrays.asList(items), player);
     }
 
@@ -275,8 +274,7 @@ public class FishUtils {
 
             return region.getName();
         }
-
-        plugin.getLogger().warning("Please install WorldGuard or RedProtect to use region-boosts.");
+        
         return null;
     }
 
@@ -427,22 +425,11 @@ public class FishUtils {
     }
 
     public static @NotNull ItemStack getSkullFromBase64(@NotNull String base64) {
-        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
-        skull.editMeta(SkullMeta.class, meta -> {
-            PlayerProfile profile = Bukkit.createProfile(B64_SKULL_UUID, "EMFSkull");
-            profile.setProperty(new ProfileProperty("textures", base64));
-            meta.setPlayerProfile(profile);
-        });
-        return skull;
+        return EvenMoreFish.getInstance().getSkullFromBase64(base64);
     }
 
     public static @NotNull ItemStack getSkullFromUUID(@NotNull UUID uuid) {
-        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
-        skull.editMeta(SkullMeta.class, meta -> {
-            PlayerProfile profile = Bukkit.createProfile(uuid, "EMFSkull");
-            meta.setPlayerProfile(profile);
-        });
-        return skull;
+        return EvenMoreFish.getInstance().getSkullFromUUID(uuid);
     }
 
     public static @NotNull ItemStack getSkullFromUUIDString(@NotNull String uuidString) {
@@ -626,6 +613,15 @@ public class FishUtils {
 
     public static boolean inventoryHasSpace(@Nullable Inventory inventory) {
         return inventory != null && inventory.firstEmpty() != -1;
+    }
+
+    public static boolean classExists(@NotNull String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
 }

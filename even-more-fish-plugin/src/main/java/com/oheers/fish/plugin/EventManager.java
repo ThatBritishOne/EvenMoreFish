@@ -6,7 +6,6 @@ import com.oheers.fish.SkullSaver;
 import com.oheers.fish.baits.BaitApplicationListener;
 import com.oheers.fish.competition.JoinChecker;
 import com.oheers.fish.database.DatabaseUtil;
-import com.oheers.fish.events.FishEatEvent;
 import com.oheers.fish.events.FishInteractEvent;
 import com.oheers.fish.fishing.EMFFishListener;
 import com.oheers.fish.fishing.FishingProcessor;
@@ -43,7 +42,6 @@ public class EventManager {
         pm.registerEvents(new ItemProtectionListener(), plugin);
         pm.registerEvents(new FishInteractEvent(), plugin);
         pm.registerEvents(new RecipeListener(), plugin);
-        pm.registerEvents(new ServerLoadListener(), plugin);
     }
 
     public void registerOptionalListeners() {

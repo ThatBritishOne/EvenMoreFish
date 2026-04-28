@@ -2,17 +2,17 @@ package com.oheers.fish.fishing.items;
 
 import com.oheers.fish.EvenMoreFish;
 import com.oheers.fish.FishUtils;
-import com.oheers.fish.api.fishing.items.IRarity;
-import com.oheers.fish.api.requirement.Requirement;
 import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.api.config.ConfigUtils;
-import com.oheers.fish.exceptions.InvalidFishException;
 import com.oheers.fish.api.fishing.CatchType;
+import com.oheers.fish.api.fishing.items.IRarity;
+import com.oheers.fish.api.requirement.Requirement;
+import com.oheers.fish.exceptions.InvalidFishException;
 import com.oheers.fish.fishing.items.config.RarityFileUpdates;
 import com.oheers.fish.items.ItemFactory;
 import com.oheers.fish.messages.EMFSingleMessage;
+import com.oheers.fish.utils.sort.Sortable;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
-import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -23,11 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
-public class Rarity extends ConfigBase implements IRarity {
+public class Rarity extends ConfigBase implements IRarity, Sortable {
 
-    private static final Logger logger = EvenMoreFish.getInstance().getLogger();
+    private final @NotNull String id;
 
     private boolean fishWeighted;
     private boolean showInJournal = true;
@@ -41,25 +40,25 @@ public class Rarity extends ConfigBase implements IRarity {
     public Rarity(@NotNull File file) throws InvalidConfigurationException {
         super(file, EvenMoreFish.getInstance(), false);
         new RarityFileUpdates(this).update();
-        performRequiredConfigChecks();
+        this.id = validateId();
         this.requirement = loadRequirements();
         this.fishList = loadFish();
         this.showInJournal = getConfig().getBoolean("journal", true);
     }
 
-    // Current required config: id
-    private void performRequiredConfigChecks() throws InvalidConfigurationException {
-        if (getConfig().getString("id") == null) {
-            logger.warning("Rarity invalid: 'id' missing in " + getFileName());
-            throw new InvalidConfigurationException("An ID has not been found in " + getFileName() + ". Please correct this.");
+    private String validateId() throws InvalidConfigurationException {
+        String id = getConfig().getString("id");
+        if (id == null) {
+            throw new InvalidConfigurationException("Rarity " + getFileName() + " has no configured id.");
         }
+        return id;
     }
 
     // Config getters
 
     @Override
     public @NotNull String getId() {
-        return Objects.requireNonNull(getConfig().getString("id"));
+        return this.id;
     }
 
     @Override
@@ -104,8 +103,8 @@ public class Rarity extends ConfigBase implements IRarity {
     }
 
     public @NotNull EMFSingleMessage getDisplayName() {
-        String displayName = getConfig().getString("displayname");
-        return format(Objects.requireNonNullElseGet(displayName, this::getId));
+        String displayName = getConfig().getString("displayname", this.id);
+        return format(displayName);
     }
 
     public @NotNull EMFSingleMessage getLorePrep() {
@@ -122,6 +121,10 @@ public class Rarity extends ConfigBase implements IRarity {
             finalName = finalName.toUpperCase();
         }
         return format(finalName);
+    }
+
+    protected List<String> getLoreOverride() {
+        return getConfig().getStringList("lore-override");
     }
 
     @Override

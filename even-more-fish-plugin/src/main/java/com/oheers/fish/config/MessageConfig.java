@@ -3,6 +3,7 @@ package com.oheers.fish.config;
 import com.oheers.fish.EvenMoreFish;
 import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.messages.EMFConfigLoader;
+import dev.dejvokep.boostedyaml.YamlDocument;
 import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
 
 public class MessageConfig extends ConfigBase {
@@ -10,11 +11,19 @@ public class MessageConfig extends ConfigBase {
     private static MessageConfig instance = null;
 
     private EMFConfigLoader messageLoader;
+    private final EMFConfigLoader defaultMessageLoader;
 
     public MessageConfig() {
         super("messages.yml", "locales/" + "messages_" + MainConfig.getInstance().getLocale() + ".yml", EvenMoreFish.getInstance(), true);
         instance = this;
         this.messageLoader = new EMFConfigLoader(getConfig());
+
+        // Defaults should always exist for this file.
+        YamlDocument defaults = getConfig().getDefaults();
+        if (defaults == null) {
+            throw new IllegalStateException("MessageConfig has no assigned defaults.");
+        }
+        this.defaultMessageLoader = new EMFConfigLoader(defaults);
     }
 
     public static MessageConfig getInstance() {
@@ -25,6 +34,10 @@ public class MessageConfig extends ConfigBase {
         return messageLoader;
     }
 
+    public EMFConfigLoader getDefaultMessageLoader() {
+        return defaultMessageLoader;
+    }
+
     @Override
     public void reload() {
         super.reload();
@@ -32,7 +45,7 @@ public class MessageConfig extends ConfigBase {
     }
 
     public int getLeaderboardCount() {
-        return getConfig().getInt("leaderboard-count", 5);
+        return getConfig().getInt("leaderboard.leaderboard-count", 5);
     }
 
     @Override
@@ -98,6 +111,20 @@ public class MessageConfig extends ConfigBase {
             .addCustomLogic("9", document -> {
                 document.move("emf-time-remaining", "emf-time-remaining.inactive");
                 document.remove("emf-time-remaining-during-comp");
+            })
+
+            // Config Version 10 - Overhaul
+            .addCustomLogic("10", document -> {
+                document.move("leaderboard-largest-fish", "leaderboard.largest-fish");
+                document.move("leaderboard-largest-total",  "leaderboard.largest-total");
+                document.move("leaderboard-most-fish",  "leaderboard.most-fish");
+                document.move("leaderboard-shortest-fish", "leaderboard.shortest-fish");
+                document.move("leaderboard-shortest-total", "leaderboard.shortest-total");
+                document.move("single-winner", "leaderboard.single-winner");
+                document.move("total-players",  "leaderboard.total-players");
+                document.move("leaderboard-count", "leaderboard.leaderboard-count");
+                document.move("no-winners", "leaderboard.no-winners");
+                document.move("no-records", "leaderboard.no-records");
             })
 
             .build();

@@ -9,7 +9,6 @@ import com.oheers.fish.exceptions.MaxBaitsReachedException;
 import com.oheers.fish.messages.ConfigMessage;
 import com.oheers.fish.messages.EMFListMessage;
 import com.oheers.fish.messages.EMFSingleMessage;
-import com.oheers.fish.messages.abstracted.EMFMessage;
 import com.oheers.fish.utils.WeightedRandom;
 import com.oheers.fish.utils.nbt.NbtKeys;
 import com.oheers.fish.utils.nbt.NbtUtils;
@@ -530,7 +529,7 @@ public class BaitNBTManager {
             int maxBaits = MainConfig.getInstance().getBaitsPerRod() + ConfigMessage.BAIT_ROD_LORE.getMessage().getPlainTextListMessage().size();
             for (int i = 1; i < maxBaits; i++) {
                 try {
-                    lore.remove(lore.size() - 1);
+                    lore.removeLast();
                 } catch (IndexOutOfBoundsException exception) {
                     break;
                 }
@@ -541,7 +540,7 @@ public class BaitNBTManager {
             //compliant version
             for (int i = 1; i < numBaitsApplied; i++) {
                 try {
-                lore.remove(lore.size() - 1);
+                lore.removeLast();
                 } catch (IndexOutOfBoundsException exception) {
                     break;
                 }

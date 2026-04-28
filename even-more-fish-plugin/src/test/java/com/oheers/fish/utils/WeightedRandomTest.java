@@ -1,5 +1,6 @@
 package com.oheers.fish.utils;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -31,17 +32,17 @@ class WeightedRandomTest {
     record TestItem(String name, double weight) {
 
         @Override
-            public String toString() {
-                return name;
-            }
+        public @NotNull String toString() {
+            return name;
         }
+    }
 
     @Test
     void testPick_withSimpleWeights() {
         List<TestItem> items = List.of(
-                new TestItem("A", 1.0),
-                new TestItem("B", 2.0),
-                new TestItem("C", 3.0)
+            new TestItem("A", 1.0),
+            new TestItem("B", 2.0),
+            new TestItem("C", 3.0)
         );
 
         Random rng = new Random(42); // fixed seed
@@ -82,9 +83,9 @@ class WeightedRandomTest {
     @Test
     void testPick_withZeroWeights() {
         List<TestItem> items = List.of(
-                new TestItem("A", 0.0),
-                new TestItem("B", 0.0),
-                new TestItem("C", 0.0)
+            new TestItem("A", 0.0),
+            new TestItem("B", 0.0),
+            new TestItem("C", 0.0)
         );
 
         // Should still return something — the last fallback handles this
@@ -98,9 +99,9 @@ class WeightedRandomTest {
         // Verifies empirical frequency roughly matches theoretical ratio (1:2:3)
         // With weights 1:2:3, we expect approx 1/6, 2/6, 3/6 frequency
         List<TestItem> items = List.of(
-                new TestItem("A", 1.0),
-                new TestItem("B", 2.0),
-                new TestItem("C", 3.0)
+            new TestItem("A", 1.0),
+            new TestItem("B", 2.0),
+            new TestItem("C", 3.0)
         );
 
         Random rng = new Random(123);
@@ -159,9 +160,9 @@ class WeightedRandomTest {
     @Test
     void testPick_withNegativeWeights() {
         List<TestItem> items = List.of(
-                new TestItem("A", -10.0),
-                new TestItem("B", 0.0),
-                new TestItem("C", 5.0)
+            new TestItem("A", -10.0),
+            new TestItem("B", 0.0),
+            new TestItem("C", 5.0)
         );
 
         Random rng = new Random(42);

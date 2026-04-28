@@ -93,18 +93,19 @@ public class BaitApplicationListener implements Listener {
         } catch (MaxBaitReachedException exception) {
             result = exception.getRecoveryResult();
             EMFMessage message = ConfigMessage.BAITS_MAXED_ON_ROD.getMessage();
-            message.setBait(bait.format(bait.getId()));
+            message.setBait(bait);
             message.send(event.getWhoClicked());
         }
 
-        if (result == null || result.getFishingRod() == null) {
+        ItemStack resultRod = result.fishingRod();
+        if (resultRod.isEmpty()) {
             return;
         }
 
         event.setCancelled(true);
-        event.setCurrentItem(result.getFishingRod());
+        event.setCurrentItem(resultRod);
 
-        int cursorModifier = result.getCursorItemModifier();
+        int cursorModifier = result.cursorItemModifier();
 
         if (cursor.getAmount() - cursorModifier == 0) {
             event.getWhoClicked().setItemOnCursor(new ItemStack(Material.AIR));

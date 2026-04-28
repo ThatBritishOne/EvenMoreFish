@@ -2,8 +2,6 @@ package com.oheers.fish.commands;
 
 import com.oheers.fish.Checks;
 import com.oheers.fish.EvenMoreFish;
-import com.oheers.fish.Toggle;
-import com.oheers.fish.api.economy.Economy;
 import com.oheers.fish.commands.arguments.ArgumentHelper;
 import com.oheers.fish.commands.arguments.RarityArgument;
 import com.oheers.fish.competition.Competition;
@@ -77,6 +75,7 @@ public class MainCommand {
             ConfigMessage.HELP_GENERAL_NEXT::getMessage
         );
         return new CommandAPICommand(name)
+            .withRequirement(sender -> sender.hasPermission(UserPerms.NEXT) && EvenMoreFish.getInstance().getCompetitionQueue().hasTimings())
             .withPermission(UserPerms.NEXT)
             .executes(info -> {
                 EMFMessage message = Competition.getNextCompetitionMessage();

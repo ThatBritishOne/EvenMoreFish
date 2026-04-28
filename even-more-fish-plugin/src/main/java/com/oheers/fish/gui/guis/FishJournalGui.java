@@ -2,6 +2,7 @@ package com.oheers.fish.gui.guis;
 
 import com.oheers.fish.EvenMoreFish;
 import com.oheers.fish.FishUtils;
+import com.oheers.fish.api.Logging;
 import com.oheers.fish.config.GuiConfig;
 import com.oheers.fish.database.Database;
 import com.oheers.fish.database.data.FishRarityKey;
@@ -15,8 +16,8 @@ import com.oheers.fish.gui.ConfigGui;
 import com.oheers.fish.items.ItemFactory;
 import com.oheers.fish.messages.EMFListMessage;
 import com.oheers.fish.messages.EMFSingleMessage;
-import com.oheers.fish.api.Logging;
-import de.themoep.inventorygui.DynamicGuiElement;
+import com.oheers.fish.utils.sort.SortType;
+import com.oheers.fish.utils.sort.Sortable;
 import de.themoep.inventorygui.GuiElement;
 import de.themoep.inventorygui.GuiElementGroup;
 import de.themoep.inventorygui.StaticGuiElement;
@@ -29,12 +30,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.Supplier;
 
 public class FishJournalGui extends ConfigGui {
@@ -75,7 +72,7 @@ public class FishJournalGui extends ConfigGui {
         char character = FishUtils.getCharFromString(section.getString("fish-character"), 'f');
 
         GuiElementGroup group = new GuiElementGroup(character);
-        sortType.sortFish(this.rarity.getFishList()).forEach(fish -> {
+        sortType.sort(this.rarity.getFishList()).forEach(fish -> {
             if (!fish.getShowInJournal()) {
                 return;
             }
@@ -134,21 +131,23 @@ public class FishJournalGui extends ConfigGui {
         final FishStats fishStats = EvenMoreFish.getInstance().getPluginDataManager().getFishStatsDataManager().get(FishRarityKey.of(fish).toString());
 
         final String discoverDate = getValueOrDefault(() -> userFishStats.getFirstCatchTime().format(DateTimeFormatter.ISO_DATE), getUnknownMessage());
-        final String discoverer = getValueOrDefault(() -> FishUtils.getPlayerName(fishStats.getDiscovererName()), getUnknownMessage());
+
+        @SuppressWarnings("Convert2MethodRef") // Suppressed as it introduces an unwanted Objects#requireNonNull when compiled.
+        final String discoverer = getValueOrDefault(() -> fishStats.getDiscovererName(), getUnknownMessage());
 
         EMFListMessage lore = EMFListMessage.fromStringList(
             Optional.ofNullable(factory.getLore().getConfiguredValue())
                 .orElse(Collections.emptyList())
         );
 
-        lore.setVariable("{times-caught}", getValueOrDefault(() -> Integer.toString(userFishStats.getQuantity()), "0"));
-        lore.setVariable("{largest-size}", getValueOrDefault(() -> String.valueOf(userFishStats.getLongestLength()), "0"));
-        lore.setVariable("{smallest-size}", getValueOrDefault(() -> String.valueOf(userFishStats.getShortestLength()), "0"));
+        lore.setVariable("{times-caught}", getValueOrDefault(() -> userFishStats == null ? null : Integer.toString(userFishStats.getQuantity()), "0"));
+        lore.setVariable("{largest-size}", getValueOrDefault(() -> userFishStats == null ? null : String.valueOf(userFishStats.getLongestLength()), "0"));
+        lore.setVariable("{smallest-size}", getValueOrDefault(() -> userFishStats == null ? null : String.valueOf(userFishStats.getShortestLength()), "0"));
         lore.setVariable("{discover-date}", discoverDate);
         lore.setVariable("{discoverer}", discoverer);
-        lore.setVariable("{server-largest}", getValueOrDefault(() -> String.valueOf(fishStats.getLongestLength()), "0"));
-        lore.setVariable("{server-smallest}", getValueOrDefault(() -> String.valueOf(fishStats.getShortestLength()), "0"));
-        lore.setVariable("{server-caught}", getValueOrDefault(() -> String.valueOf(fishStats.getQuantity()), "0"));
+        lore.setVariable("{server-largest}", getValueOrDefault(() -> fishStats == null ? null : String.valueOf(fishStats.getLongestLength()), "0"));
+        lore.setVariable("{server-smallest}", getValueOrDefault(() -> fishStats == null ? null : String.valueOf(fishStats.getShortestLength()), "0"));
+        lore.setVariable("{server-caught}", getValueOrDefault(() -> fishStats == null ? null : String.valueOf(fishStats.getQuantity()), "0"));
 
         return lore;
     }
@@ -170,7 +169,7 @@ public class FishJournalGui extends ConfigGui {
         char character = FishUtils.getCharFromString(section.getString("rarity-character"), 'r');
 
         GuiElementGroup group = new GuiElementGroup(character);
-        sortType.sortRarities(FishManager.getInstance().getRarityMap().values()).forEach(rarity -> {
+        sortType.sort(FishManager.getInstance().getRarityMap().values()).forEach(rarity -> {
             if (!rarity.getShowInJournal()) {
                 return;
             }
@@ -233,32 +232,6 @@ public class FishJournalGui extends ConfigGui {
             Logging.warn(logMessage);
         }
         return db;
-    }
-
-    public enum SortType {
-        ALPHABETICAL(Comparator.comparing(Rarity::getId), Comparator.comparing(Fish::getName)),
-        WEIGHT(Comparator.comparingDouble(Rarity::getWeight).reversed(), Comparator.comparingDouble(Fish::getWeight).reversed());
-
-        private final Comparator<Rarity> rarityComparator;
-        private final Comparator<Fish> fishComparator;
-
-        SortType(Comparator<Rarity> rarityComparator, Comparator<Fish> fishComparator) {
-            this.rarityComparator = rarityComparator;
-            this.fishComparator = fishComparator;
-        }
-
-        public TreeSet<Rarity> sortRarities(@NotNull Collection<Rarity> collection) {
-            TreeSet<Rarity> set = new TreeSet<>(rarityComparator);
-            set.addAll(collection);
-            return set;
-        }
-
-        public TreeSet<Fish> sortFish(@NotNull Collection<Fish> collection) {
-            TreeSet<Fish> set = new TreeSet<>(fishComparator);
-            set.addAll(collection);
-            return set;
-        }
-
     }
 
 }

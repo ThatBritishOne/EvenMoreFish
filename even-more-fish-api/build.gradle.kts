@@ -1,6 +1,6 @@
 plugins {
-    id("com.oheers.evenmorefish.java-conventions")
-    id("com.oheers.evenmorefish.publishing-conventions")
+    id("org.evenmorefish.fish.java-conventions")
+    id("org.evenmorefish.fish.publishing-conventions")
 
     `java-library`
 }
@@ -22,7 +22,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
         vendor.set(JvmVendorSpec.ADOPTIUM)
     }
     withSourcesJar()

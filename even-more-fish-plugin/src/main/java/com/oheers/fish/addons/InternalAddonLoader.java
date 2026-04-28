@@ -19,6 +19,7 @@ import com.oheers.fish.addons.internal.requirement.MoonPhaseRequirementType;
 import com.oheers.fish.addons.internal.requirement.NearbyPlayersRequirementType;
 import com.oheers.fish.addons.internal.requirement.PlaceholderRequirementType;
 import com.oheers.fish.addons.internal.requirement.RegionRequirementType;
+import com.oheers.fish.addons.internal.requirement.RewardTypeRequirementType;
 import com.oheers.fish.addons.internal.requirement.WeatherRequirementType;
 import com.oheers.fish.addons.internal.requirement.WorldRequirementType;
 import com.oheers.fish.addons.internal.reward.CommandRewardType;
@@ -27,9 +28,9 @@ import com.oheers.fish.addons.internal.reward.EffectRewardType;
 import com.oheers.fish.addons.internal.reward.HealthRewardType;
 import com.oheers.fish.addons.internal.reward.HungerRewardType;
 import com.oheers.fish.addons.internal.reward.ItemRewardType;
+import com.oheers.fish.addons.internal.reward.SoundRewardType;
 import com.oheers.fish.addons.internal.reward.message.ActionBarRewardType;
 import com.oheers.fish.addons.internal.reward.message.MessageRewardType;
-import com.oheers.fish.addons.internal.reward.SoundRewardType;
 import com.oheers.fish.addons.internal.reward.message.SubtitleRewardType;
 import com.oheers.fish.addons.internal.reward.message.TitleRewardType;
 import com.oheers.fish.api.addons.AddonLoader;
@@ -104,6 +105,7 @@ public class InternalAddonLoader extends AddonLoader {
         new RegionRequirementType().register();
         new WeatherRequirementType().register();
         new WorldRequirementType().register();
+        new RewardTypeRequirementType().register();
 
         // Load Group RequirementType
         Permission permission = EvenMoreFish.getInstance().getDependencyManager().getPermission();

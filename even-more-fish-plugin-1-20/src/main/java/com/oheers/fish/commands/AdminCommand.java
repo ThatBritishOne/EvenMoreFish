@@ -2,15 +2,20 @@ package com.oheers.fish.commands;
 
 import com.oheers.fish.EvenMoreFish;
 import com.oheers.fish.FishUtils;
+import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.api.utils.ManifestUtil;
 import com.oheers.fish.baits.BaitHandler;
 import com.oheers.fish.baits.manager.BaitManager;
 import com.oheers.fish.baits.manager.BaitNBTManager;
-import com.oheers.fish.commands.arguments.*;
+import com.oheers.fish.commands.arguments.ArgumentHelper;
+import com.oheers.fish.commands.arguments.BaitArgument;
+import com.oheers.fish.commands.arguments.CompetitionTypeArgument;
+import com.oheers.fish.commands.arguments.CustomRodArgument;
+import com.oheers.fish.commands.arguments.FishArgument;
+import com.oheers.fish.commands.arguments.RarityArgument;
 import com.oheers.fish.competition.Competition;
 import com.oheers.fish.competition.CompetitionType;
 import com.oheers.fish.competition.configs.CompetitionFile;
-import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.database.Database;
 import com.oheers.fish.database.DatabaseUtil;
 import com.oheers.fish.fishing.items.Fish;
@@ -22,7 +27,6 @@ import com.oheers.fish.messages.EMFSingleMessage;
 import com.oheers.fish.messages.PrefixType;
 import com.oheers.fish.messages.abstracted.EMFMessage;
 import com.oheers.fish.permissions.AdminPerms;
-import com.oheers.fish.utils.DurationFormatter;
 import de.tr7zw.changeme.nbtapi.NBT;
 import dev.dejvokep.boostedyaml.YamlDocument;
 import dev.jorel.commandapi.CommandAPICommand;
@@ -119,7 +123,7 @@ public class AdminCommand {
                         fish.getFishRewards().forEach(reward -> reward.rewardPlayer(target, target.getLocation()));
                     }
 
-                    fish.setFisherman(target.getUniqueId());
+                    fish.setFisherman(target);
 
                     final ItemStack fishItem = fish.give();
                     fishItem.setAmount(amount);
@@ -232,7 +236,34 @@ public class AdminCommand {
             "admin bait",
             ConfigMessage.HELP_ADMIN_BAIT::getMessage
         );
+        HELP_MESSAGE.addUsage(
+            "admin bait debug",
+            () -> EMFSingleMessage.fromString("Shows the resolved bait chances for a player.")
+        );
         return new CommandAPICommand("bait")
+            .withSubcommands(
+                new CommandAPICommand("debug")
+                    .withArguments(
+                        BaitArgument.create(),
+                        ArgumentHelper.getPlayerArgument("target").setOptional(true)
+                    )
+                    .executes((sender, args) -> {
+                        final BaitHandler bait = Objects.requireNonNull(args.getUnchecked("bait"));
+                        final Player target = (Player) args.getOptional("target").orElseGet(() -> {
+                            if (sender instanceof Player player) {
+                                return player;
+                            }
+                            return null;
+                        });
+
+                        if (target == null) {
+                            ConfigMessage.ADMIN_CANT_BE_CONSOLE.getMessage().send(sender);
+                            return;
+                        }
+
+                        bait.createDebugMessages(target).forEach(sender::sendMessage);
+                    })
+            )
             .withArguments(
                 BaitArgument.create(),
                 new IntegerArgument("quantity", 1).setOptional(true),
@@ -260,7 +291,7 @@ public class AdminCommand {
                 }
                 EMFMessage message = ConfigMessage.ADMIN_GIVE_PLAYER_BAIT.getMessage();
                 message.setVariable("{player}", CommandUtils.getPlayersVariable(targets));
-                message.setBait(bait.getId());
+                message.setBait(bait);
                 message.send(sender);
             });
     }

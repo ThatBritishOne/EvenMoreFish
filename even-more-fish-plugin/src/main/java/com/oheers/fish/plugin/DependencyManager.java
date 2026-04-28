@@ -1,13 +1,15 @@
 package com.oheers.fish.plugin;
 
 import com.oheers.fish.EvenMoreFish;
+import com.oheers.fish.FishUtils;
+import com.oheers.fish.api.economy.EconomyType;
 import com.oheers.fish.config.MainConfig;
 import com.oheers.fish.economy.GriefPreventionEconomyType;
 import com.oheers.fish.economy.PlayerPointsEconomyType;
 import com.oheers.fish.economy.VaultEconomyType;
 import com.oheers.fish.events.AuraSkillsFishingEvent;
 import com.oheers.fish.events.DeprecatedEventListener;
-import com.oheers.fish.events.EconomyServiceRegisterEvent;
+import com.oheers.fish.events.EconomyServiceRegisterListener;
 import com.oheers.fish.events.McMMOTreasureEvent;
 import com.oheers.fish.placeholders.PlaceholderReceiver;
 import com.oheers.fish.utils.HeadDBIntegration;
@@ -17,6 +19,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.logging.Level;
 
@@ -45,7 +49,7 @@ public class DependencyManager implements Listener {
         this.usingGriefPrevention = pm.isPluginEnabled("GriefPrevention");
         this.usingPlayerPoints = pm.isPluginEnabled("PlayerPoints");
         this.usingMcMMO = pm.isPluginEnabled("mcMMO");
-        this.usingHeadsDB = pm.isPluginEnabled("HeadDatabase");
+        this.usingHeadsDB = pm.isPluginEnabled("HeadDatabase") && FishUtils.classExists("me.arcaniax.hdb.api.HeadDatabaseAPI");
         this.usingPAPI = pm.isPluginEnabled("PlaceholderAPI");
         this.usingAuraSkills = pm.isPluginEnabled("AuraSkills");
 
@@ -53,7 +57,9 @@ public class DependencyManager implements Listener {
             setupVaultPermissions();
         }
 
-        loadEconomy();
+        loadVaultEconomy();
+        loadPlayerPointsEconomy();
+        loadGriefPreventionEconomy();
         checkPapi();
 
         // Handle deprecated events.
@@ -76,7 +82,7 @@ public class DependencyManager implements Listener {
         }
 
         if (usingVault) {
-            pm.registerEvents(new EconomyServiceRegisterEvent(this),plugin);
+            pm.registerEvents(new EconomyServiceRegisterListener(this),plugin);
         }
 
     }
@@ -116,11 +122,11 @@ public class DependencyManager implements Listener {
         return usingGriefPrevention;
     }
 
-    public Permission getPermission() {
+    public @Nullable Permission getPermission() {
         return permission;
     }
 
-    public HeadDatabaseAPI getHdbapi() {
+    public @Nullable HeadDatabaseAPI getHdbapi() {
         return hdbapi;
     }
 
@@ -140,20 +146,28 @@ public class DependencyManager implements Listener {
         return usingVault && permission != null;
     }
 
-    public void loadEconomy() {
+    public void loadVaultEconomy() {
         if (isUsingVault()) {
-            boolean state = new VaultEconomyType().register();
-            if (state) {
-                EvenMoreFish.getInstance().getLogger().info("EvenMoreFish has successfully hooked into vault.");
-            }
+            loadEconomyType(new VaultEconomyType(), "Vault");
         }
+    }
 
+    public void loadPlayerPointsEconomy() {
         if (isUsingPlayerPoints()) {
-            new PlayerPointsEconomyType().register();
+            loadEconomyType(new PlayerPointsEconomyType(), "PlayerPoints");
         }
+    }
 
+    public void loadGriefPreventionEconomy() {
         if (isUsingGriefPrevention()) {
-            new GriefPreventionEconomyType().register();
+            loadEconomyType(new GriefPreventionEconomyType(), "GriefPrevention");
+        }
+    }
+
+    private void loadEconomyType(@NotNull EconomyType type, @NotNull String name) {
+        type.load();
+        if (type.register()) {
+            EvenMoreFish.getInstance().getLogger().info("EvenMoreFish has successfully hooked into " + name + ".");
         }
     }
 

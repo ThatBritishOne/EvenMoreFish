@@ -2,16 +2,16 @@ package com.oheers.fish.competition.configs;
 
 import com.oheers.fish.EvenMoreFish;
 import com.oheers.fish.FishUtils;
+import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.api.reward.Reward;
 import com.oheers.fish.competition.CompetitionType;
-import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.fishing.items.FishManager;
 import com.oheers.fish.fishing.items.Rarity;
 import com.oheers.fish.messages.EMFSingleMessage;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
 import net.kyori.adventure.bossbar.BossBar;
-import org.bukkit.Bukkit;
 import net.kyori.adventure.sound.Sound;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.jetbrains.annotations.NotNull;
@@ -28,13 +28,18 @@ import java.util.logging.Logger;
 
 public class CompetitionFile extends ConfigBase {
 
-    private final Logger logger = getPlugin().getLogger();
+    private final @NotNull Logger logger = getPlugin().getLogger();
+    private final @NotNull String id;
+    private final @NotNull CompetitionType type;
+    private final int duration;
 
     // We should never use the configUpdater for this.
     public CompetitionFile(@NotNull File file) throws InvalidConfigurationException {
         super(file, EvenMoreFish.getInstance(), false);
         CompetitionFileUpdates.update(this);
-        performRequiredConfigChecks();
+        this.id = validateId();
+        this.type = validateType();
+        this.duration = validateDuration();
     }
 
     /**
@@ -43,33 +48,46 @@ public class CompetitionFile extends ConfigBase {
      */
     public CompetitionFile(@NotNull String id, @NotNull CompetitionType type, int duration) {
         super();
-        getConfig().set("id", id);
-        getConfig().set("type", type.toString());
-        getConfig().set("duration", duration);
+        this.id = id;
+        this.type = type;
+        this.duration = duration;
     }
 
-    // Current required config: id, type, times
-    private void performRequiredConfigChecks() throws InvalidConfigurationException {
-        if (getConfig().getString("id") == null) {
-            logger.warning("Competition invalid: 'id' missing in " + getFileName());
-            throw new InvalidConfigurationException("An ID has not been found in " + getFileName() + ". Please correct this.");
+    private String validateId() throws InvalidConfigurationException {
+        String id = getConfig().getString("id");
+        if (id == null) {
+            throw new InvalidConfigurationException("CompetitionFile " + getFileName() + " has no configured id.");
         }
-        String type = getConfig().getString("type");
-        if (type == null || CompetitionType.getType(type) == null) {
-            logger.warning("Competition invalid: 'type' missing in " + getFileName());
-            throw new InvalidConfigurationException("A type has not been found in " + getFileName() + ". Please correct this.");
+        return id;
+    }
+
+    private CompetitionType validateType() throws InvalidConfigurationException {
+        String typeStr = getConfig().getString("type");
+        if (typeStr == null) {
+            throw new InvalidConfigurationException("CompetitionFile " + getFileName() + " has no configured type.");
         }
-        if (getConfig().getInt("duration", -1) == -1) {
-            logger.warning("Competition invalid: 'duration' missing in " + getFileName());
-            throw new InvalidConfigurationException("A duration has not been found in " + getFileName() + ". Please correct this.");
+        CompetitionType type = CompetitionType.getType(typeStr);
+        if (type == null) {
+            throw new InvalidConfigurationException("CompetitionFile " + getFileName() + " has an invalid type: " + typeStr);
         }
+        return type;
+    }
+
+    private int validateDuration() throws InvalidConfigurationException {
+        Integer duration = getConfig().getInt("duration", null);
+        if (duration == null) {
+            throw new InvalidConfigurationException("CompetitionFile " + getFileName() + " has no configured duration.");
+        } else if (duration < 1) {
+            throw new InvalidConfigurationException("CompetitionFile " + getFileName() + " has an invalid duration. Must be 1 or more.");
+        }
+        return duration;
     }
 
     /**
      * @return The ID for this competition.
      */
     public @NotNull String getId() {
-        return Objects.requireNonNull(getConfig().getString("id"));
+        return this.id;
     }
 
     /**
@@ -83,7 +101,7 @@ public class CompetitionFile extends ConfigBase {
      * @return This competition's type.
      */
     public @NotNull CompetitionType getType() {
-        return Objects.requireNonNull(CompetitionType.getType(getConfig().getString("type")));
+        return this.type;
     }
 
     /**
@@ -116,7 +134,7 @@ public class CompetitionFile extends ConfigBase {
      * @return The duration of this competition (in minutes).
      */
     public int getDuration() {
-        return Math.max(1, getConfig().getInt("duration"));
+        return this.duration;
     }
 
     /**

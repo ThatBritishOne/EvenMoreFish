@@ -1,13 +1,13 @@
 package com.oheers.fish.economy;
 
 import com.oheers.fish.EvenMoreFish;
-import com.oheers.fish.FishUtils;
+import com.oheers.fish.api.Logging;
 import com.oheers.fish.api.economy.EconomyType;
 import com.oheers.fish.config.MainConfig;
-import com.oheers.fish.messages.ConfigMessage;
 import com.oheers.fish.messages.EMFSingleMessage;
 import net.kyori.adventure.text.Component;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
@@ -17,28 +17,31 @@ import java.util.logging.Level;
 
 public class VaultEconomyType implements EconomyType {
 
-    private Economy economy = null;
+    private Economy economy;
+    
+    @Override
+    public String getIdentifier() {
+        return "Vault";
+    }
 
-    public VaultEconomyType() {
+    @Override
+    public void load() {
+        if (!MainConfig.getInstance().isEconomyEnabled(this)) {
+            return;
+        }
         EvenMoreFish emf = EvenMoreFish.getInstance();
-        if (!EvenMoreFish.getInstance().getDependencyManager().isUsingVault()) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("Vault")) {
             EvenMoreFish.getInstance().debug("Attempting to register Vault but it is not available.. ignoring");
             return;
         }
-
-        emf.getLogger().log(Level.INFO, "Economy attempting to hook into Vault.");
+        Logging.info("Economy attempting to hook into Vault.");
         RegisteredServiceProvider<Economy> rsp = emf.getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            emf.debug(Level.WARNING, "Could not obtain service..");
+            Logging.warn("Could not obtain Vault Economy service.");
             return;
         }
         economy = rsp.getProvider();
         emf.getLogger().log(Level.INFO, "Economy hooked into Vault.");
-    }
-
-    @Override
-    public String getIdentifier() {
-        return "Vault";
     }
 
     @Override
@@ -67,7 +70,7 @@ public class VaultEconomyType implements EconomyType {
         if (!isAvailable()) {
             return false;
         }
-        return get(player) >= amount;
+        return economy.has(player, amount);
     }
 
     @Override
@@ -78,20 +81,25 @@ public class VaultEconomyType implements EconomyType {
         return economy.getBalance(player);
     }
 
+    /**
+     * Prepares a double for use with this economy type.
+     *
+     * @param value           The value to prepare.
+     * @param applyMultiplier Should we apply the multiplier?
+     * @return A prepared double for use with this economy type.
+     */
     @Override
     public double prepareValue(double value, boolean applyMultiplier) {
-        double finalValue = value;
-        if (applyMultiplier) {
-            finalValue = value * getMultiplier();
-        }
-        return finalValue;
+        return applyMultiplier ? value * getMultiplier() : value;
     }
 
-    @Override
-    public boolean isAvailable() {
-        return (MainConfig.getInstance().isEconomyEnabled(this) && economy != null);
-    }
-
+    /**
+     * Creates a String to represent this value.
+     *
+     * @param totalWorth      The value to represent.
+     * @param applyMultiplier Should the multiplier be applied to the value?
+     * @return A String to represent this value.
+     */
     @Override
     public @Nullable Component formatWorth(double totalWorth, boolean applyMultiplier) {
         if (!isAvailable()) {
@@ -99,6 +107,7 @@ public class VaultEconomyType implements EconomyType {
         }
         double worth = prepareValue(totalWorth, applyMultiplier);
         String worthFormatted = economy.format(worth);
+
         String display = MainConfig.getInstance().getEconomyDisplay(this);
         if (display == null) {
             return Component.text(worthFormatted);
@@ -106,6 +115,11 @@ public class VaultEconomyType implements EconomyType {
         EMFSingleMessage message = EMFSingleMessage.fromString(display);
         message.setVariable("{amount}", worthFormatted);
         return message.getComponentMessage();
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return MainConfig.getInstance().isEconomyEnabled(this) && economy != null;
     }
 
 }

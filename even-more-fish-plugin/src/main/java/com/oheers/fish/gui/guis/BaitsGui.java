@@ -7,34 +7,29 @@ import com.oheers.fish.baits.manager.BaitManager;
 import com.oheers.fish.config.GuiConfig;
 import com.oheers.fish.gui.ConfigGui;
 import com.oheers.fish.messages.ConfigMessage;
-import com.oheers.fish.messages.abstracted.EMFMessage;
 import com.oheers.fish.utils.CooldownHelper;
+import com.oheers.fish.utils.sort.SortType;
+import com.oheers.fish.utils.sort.Sortable;
 import de.themoep.inventorygui.DynamicGuiElement;
 import de.themoep.inventorygui.GuiElementGroup;
 import de.themoep.inventorygui.StaticGuiElement;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.NotNullByDefault;
 import uk.firedev.messagelib.message.ComponentListMessage;
 import uk.firedev.messagelib.message.ComponentMessage;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 public class BaitsGui extends ConfigGui {
 
     private final CooldownHelper confirmation = CooldownHelper.create();
     private final CooldownHelper cooldown = CooldownHelper.create();
+    private final SortType sortType;
 
     public BaitsGui(@NotNull HumanEntity player) {
         super(
@@ -45,6 +40,9 @@ public class BaitsGui extends ConfigGui {
         createGui();
 
         Section config = getGuiConfig();
+
+        // TODO fetch sort type from config after baits have weight.
+        this.sortType = SortType.ALPHABETICAL;
         if (config != null) {
             getGui().addElements(getBaitsGroup(config));
         }
@@ -55,7 +53,7 @@ public class BaitsGui extends ConfigGui {
 
         return new DynamicGuiElement(character, who -> {
             GuiElementGroup group = new GuiElementGroup(character);
-            BaitManager.getInstance().getItemMap().values()
+            sortType.sort(BaitManager.getInstance().getItemMap().values())
                 .forEach(bait -> group.addElement(createBaitElement(character, bait)));
             return group;
         });

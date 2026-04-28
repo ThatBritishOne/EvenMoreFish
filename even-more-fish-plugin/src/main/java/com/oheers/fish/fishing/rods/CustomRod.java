@@ -1,6 +1,7 @@
 package com.oheers.fish.fishing.rods;
 
 import com.oheers.fish.EvenMoreFish;
+import com.oheers.fish.api.Logging;
 import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.api.fishing.rods.ICustomRod;
 import com.oheers.fish.fishing.items.Fish;
@@ -9,7 +10,6 @@ import com.oheers.fish.fishing.items.Rarity;
 import com.oheers.fish.items.ItemFactory;
 import com.oheers.fish.recipe.EMFRecipe;
 import com.oheers.fish.recipe.RecipeUtil;
-import com.oheers.fish.api.Logging;
 import com.oheers.fish.utils.nbt.NbtKeys;
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.iface.ReadWriteNBT;
@@ -19,7 +19,6 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.util.List;
@@ -28,6 +27,7 @@ import java.util.stream.Stream;
 
 public class CustomRod extends ConfigBase implements ICustomRod {
 
+    private final @NotNull String id;
     private final List<Rarity> allowedRarities;
     private final List<Fish> allowedFish;
     private final EMFRecipe<?> recipe;
@@ -35,7 +35,7 @@ public class CustomRod extends ConfigBase implements ICustomRod {
 
     public CustomRod(@NotNull File file) throws InvalidConfigurationException {
         super(file, EvenMoreFish.getInstance(), false);
-        performRequiredConfigChecks();
+        this.id = validateId();
         this.allowedRarities = loadAllowedRarities();
         this.allowedFish = loadAllowedFish();
         this.factory = ItemFactory.itemFactory(getConfig());
@@ -48,12 +48,12 @@ public class CustomRod extends ConfigBase implements ICustomRod {
         this.recipe = loadRecipe();
     }
 
-    // Current required config: id
-    private void performRequiredConfigChecks() throws InvalidConfigurationException {
-        if (getConfig().getString("id") == null) {
-            Logging.warn("Custom Rod invalid: 'id' missing in " + getFileName());
-            throw new InvalidConfigurationException("An ID has not been found in " + getFileName() + ". Please correct this.");
+    private String validateId() throws InvalidConfigurationException {
+        String id = getConfig().getString("id");
+        if (id == null) {
+            throw new InvalidConfigurationException("CustomRod " + getFileName() + " has no configured id.");
         }
+        return id;
     }
 
     // Loading things
@@ -115,7 +115,7 @@ public class CustomRod extends ConfigBase implements ICustomRod {
 
     @Override
     public @NotNull String getId() {
-        return Objects.requireNonNull(getConfig().getString("id"));
+        return this.id;
     }
 
     private @NotNull NamespacedKey getRecipeKey() {

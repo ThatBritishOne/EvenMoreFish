@@ -5,14 +5,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 //For use with caching only
-public class FishRarityKey {
-    private final String fishName;
-    private final String fishRarity;
-
-    public FishRarityKey(final String fishName, final String fishRarity) {
-        this.fishName = fishName;
-        this.fishRarity = fishRarity;
-    }
+public record FishRarityKey(@NotNull String fishName, @NotNull String fishRarity) {
 
 
     @Contract(value = "_, _ -> new", pure = true)
@@ -21,10 +14,18 @@ public class FishRarityKey {
     }
 
     public static @NotNull FishRarityKey from(final String pattern) {
-        if (pattern.length() == 1)
+        if (pattern == null || pattern.isEmpty())
             return empty();
 
-        return new FishRarityKey(pattern.split("\\.")[0], pattern.split("\\.")[1]);
+        int separatorIndex = pattern.lastIndexOf('.');
+        if (separatorIndex <= 0 || separatorIndex == pattern.length() - 1) {
+            return empty();
+        }
+
+        return new FishRarityKey(
+            pattern.substring(0, separatorIndex),
+            pattern.substring(separatorIndex + 1)
+        );
     }
 
     public static @NotNull FishRarityKey of(final @NotNull Fish fish) {
@@ -35,24 +36,16 @@ public class FishRarityKey {
         return new FishRarityKey("", "");
     }
 
-    public String getFishName() {
-        return fishName;
-    }
-
-    public String getFishRarity() {
-        return fishRarity;
-    }
-
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return fishName + "." + fishRarity;
     }
 
     public String toStringDefault() {
         return "FishRarityKey{" +
-                "fishName='" + fishName + '\'' +
-                ", fishRarity='" + fishRarity + '\'' +
-                '}';
+            "fishName='" + fishName + '\'' +
+            ", fishRarity='" + fishRarity + '\'' +
+            '}';
     }
 
 }

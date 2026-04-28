@@ -1,16 +1,18 @@
 package com.oheers.fish.api.economy;
 
 import com.oheers.fish.api.Logging;
-import com.oheers.fish.api.plugin.EMFPlugin;
 import com.oheers.fish.api.registry.EMFRegistry;
 import com.oheers.fish.api.registry.RegistryItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class Economy {
 
@@ -70,7 +72,7 @@ public class Economy {
      */
     public boolean isEnabled() {
         if (relevantTypes.isEmpty()) {
-            Logging.warn("There are no EconomyTypes loaded into this Economy instance.");
+            Logging.debug("There are no EconomyTypes currently loaded into this Economy instance.");
             return false;
         }
         return relevantTypes.stream().anyMatch(EconomyType::isAvailable);

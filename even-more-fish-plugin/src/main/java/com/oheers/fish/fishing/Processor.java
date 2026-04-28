@@ -33,14 +33,14 @@ import java.util.Set;
 public abstract class Processor<E extends Event> {
 
     // Used for formatting fish length.
-    private final DecimalFormat decimalFormat = new DecimalFormat("#.0");
+    public static final DecimalFormat LENGTH_FORMAT = new DecimalFormat("#.0");
     private final Random random = new Random();
 
     protected abstract void process(@NotNull E event);
 
     protected abstract boolean isEnabled();
 
-    public @Nullable ItemStack getCaughtItem(@NotNull Player player, @NotNull Location location, @NotNull ItemStack fishingRod) {
+    public @Nullable ItemStack getCaughtItem(@NotNull Player player, @NotNull Location location, @Nullable ItemStack fishingRod) {
         // Check if fishing is allowed in this world.
         if (!FishUtils.checkWorld(location)) {
             return null;
@@ -59,8 +59,12 @@ public abstract class Processor<E extends Event> {
             return getBaitItem(player);
         }
 
-        CustomRod customRod = RodManager.getInstance().getRod(fishingRod);
-        BaitHandler bait = getBaitFromRod(fishingRod, customRod);
+        CustomRod customRod = null;
+        BaitHandler bait = null;
+        if (fishingRod != null && !fishingRod.isEmpty()) {
+            customRod = RodManager.getInstance().getRod(fishingRod);
+            bait = getBaitFromRod(fishingRod, customRod);
+        }
 
         Fish fish = chooseFish(player, location, bait, customRod);
         if (fish == null) {
@@ -89,18 +93,15 @@ public abstract class Processor<E extends Event> {
         if (fish.isSilent()) {
             return;
         }
-        String length = decimalFormat.format(fish.getLength());
 
         EMFMessage message = fish.getLength() == -1 ?
             getLengthlessCaughtMessage().getMessage() :
             getCaughtMessage().getMessage();
 
         message.setPlayer(player);
-        message.setLength(length);
 
-        fish.getDisplayName();
-        message.setFishCaught(fish.getDisplayName());
-        message.setRarity(fish.getRarity().getDisplayName());
+        // Sets rarity, length, and fish display name variables
+        message.setFishCatchVariables(fish);
 
         if (fish.getRarity().getBroadcastEnabled()) {
             new FishBroadcast(message, player, fish).broadcast();
@@ -128,12 +129,14 @@ public abstract class Processor<E extends Event> {
 
         final BaitHandler bait = caughtBait.get();
 
+        ItemStack baitItem = bait.create(player);
+
         EMFMessage message = ConfigMessage.BAIT_CAUGHT.getMessage();
-        message.setBait(bait.format(bait.getId()));
+        message.setBait(bait, baitItem);
         message.setPlayer(player);
         message.send(player);
 
-        return bait.create(player);
+        return baitItem;
     }
 
     /**
@@ -178,7 +181,7 @@ public abstract class Processor<E extends Event> {
             EvenMoreFish.getInstance().getLogger().severe("Could not determine a fish for " + player.getName());
             return null;
         }
-        fish.setFisherman(player.getUniqueId());
+        fish.setFisherman(player);
         return fish;
     }
 

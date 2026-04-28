@@ -5,10 +5,8 @@ import com.oheers.fish.FishUtils;
 import com.oheers.fish.api.config.ConfigBase;
 import com.oheers.fish.api.economy.EconomyType;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
-import dev.dejvokep.boostedyaml.route.Route;
 import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
 import net.kyori.adventure.bossbar.BossBar;
-import org.apache.commons.lang3.LocaleUtils;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class MainConfig extends ConfigBase {
@@ -469,6 +466,10 @@ public class MainConfig extends ConfigBase {
 
     public @Nullable String getEconomyDisplay(@NotNull EconomyType type) {
         return getConfig().getString("economy." + type.getIdentifier().toLowerCase() + ".display");
+    }
+
+    public boolean shouldCompetitionResume() {
+        return getConfig().getBoolean("fishing.resume-competition-on-restart", false);
     }
 
     @Override

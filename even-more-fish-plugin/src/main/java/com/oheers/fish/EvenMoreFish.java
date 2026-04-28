@@ -14,7 +14,6 @@ import com.oheers.fish.competition.AutoRunner;
 import com.oheers.fish.competition.Competition;
 import com.oheers.fish.competition.CompetitionQueue;
 import com.oheers.fish.config.MainConfig;
-import com.oheers.fish.events.FishInteractEvent;
 import com.oheers.fish.events.McMMOTreasureEvent;
 import com.oheers.fish.fishing.items.FishManager;
 import com.oheers.fish.fishing.items.Rarity;
@@ -29,11 +28,13 @@ import com.oheers.fish.plugin.PluginDataManager;
 import com.oheers.fish.update.UpdateChecker;
 import de.themoep.inventorygui.InventoryGui;
 import de.tr7zw.changeme.nbtapi.NBT;
-
+import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import uk.firedev.vanishchecker.VanishChecker;
@@ -72,7 +73,10 @@ public abstract class EvenMoreFish extends EMFPlugin {
     private EMFAPI api;
 
     public static @NotNull EvenMoreFish getInstance() {
-        return Objects.requireNonNull(instance, "Plugin not initialized yet!");
+        if (instance == null) {
+            throw new IllegalStateException("Plugin not initialized yet!");
+        }
+        return instance;
     }
 
     public static TaskScheduler getScheduler() {
@@ -101,6 +105,8 @@ public abstract class EvenMoreFish extends EMFPlugin {
 
     public abstract void registerCommands();
 
+    public abstract void resendCommands();
+
     @Override
     public void onEnable() {
         enableCommands();
@@ -119,12 +125,6 @@ public abstract class EvenMoreFish extends EMFPlugin {
 
         this.integrationManager = new IntegrationManager(this);
         this.integrationManager.loadAddons();
-
-        // could not set up economy.
-        if (!Economy.getInstance().isEnabled()) {
-            getLogger().warning("EvenMoreFish won't be hooking into economy. If this wasn't by choice in config.yml, please install Economy handling plugins.");
-            getLogger().warning("This message may be a false positive, if you can spot a \"successfully hooked into \" message, it can be ignored.");
-        }
 
         this.pluginDataManager = new PluginDataManager(this);
 
@@ -159,6 +159,9 @@ public abstract class EvenMoreFish extends EMFPlugin {
 
         registerCommands();
 
+        // Attempt to resume a competition if the temporary file exists.
+        Competition.resumeFromFile();
+
         getLogger().info(() -> "EvenMoreFish by Oheers : Enabled");
     }
 
@@ -175,7 +178,7 @@ public abstract class EvenMoreFish extends EMFPlugin {
         // Ends the current competition in case the plugin is being disabled when the server will continue running
         Competition active = Competition.getCurrentlyActive();
         if (active != null) {
-            active.end(false);
+            active.end(false, true);
         }
         
         // Don't use the scheduler here because it will throw errors on disable
@@ -230,6 +233,8 @@ public abstract class EvenMoreFish extends EMFPlugin {
         if (sender != null) {
             ConfigMessage.RELOAD_SUCCESS.getMessage().send(sender);
         }
+
+        resendCommands();
 
         // This event is not cancellable.
         new EMFPluginReloadEvent().callEvent();
@@ -297,5 +302,13 @@ public abstract class EvenMoreFish extends EMFPlugin {
     public MetricsManager getMetricsManager() {
         return metricsManager;
     }
+
+    // Can probably be moved somewhere else, but they're here for now.
+
+    @ApiStatus.Internal
+    public abstract @NotNull ItemStack getSkullFromUUID(@NotNull UUID uuid);
+
+    @ApiStatus.Internal
+    public abstract @NotNull ItemStack getSkullFromBase64(@NotNull String base64);
 
 }

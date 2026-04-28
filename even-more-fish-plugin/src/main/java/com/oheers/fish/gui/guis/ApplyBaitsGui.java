@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ApplyBaitsGui extends ConfigGui {
 
@@ -35,7 +36,7 @@ public class ApplyBaitsGui extends ConfigGui {
             GuiConfig.getInstance().getConfig().getSection("apply-baits-menu"),
             player
         );
-        this.baitInventory = Objects.requireNonNullElseGet(baitInventory, () -> Bukkit.createInventory(player, 54));
+        this.baitInventory = Optional.ofNullable(baitInventory).orElse(Bukkit.createInventory(player, 54));
 
         setCloseAction(close -> {
             processBaits();
@@ -59,6 +60,9 @@ public class ApplyBaitsGui extends ConfigGui {
         boolean changedRod = false;
         List<String> ignoredBaits = new ArrayList<>();
         for (ItemStack item : baitInventory.getContents()) {
+            if (item == null || item.isEmpty()) {
+                continue;
+            }
             BaitHandler bait = BaitManager.getInstance().getBait(item);
             if (bait == null) {
                 continue;
@@ -75,7 +79,7 @@ public class ApplyBaitsGui extends ConfigGui {
                 // When a specific bait is maxed.
             } catch (MaxBaitReachedException exception) {
                 EMFMessage message = ConfigMessage.BAITS_MAXED_ON_ROD.getMessage();
-                message.setBait(bait.format(bait.getId()));
+                message.setBait(bait);
                 message.send(this.player);
                 // We should now start to ignore this bait.
                 ignoredBaits.add(bait.getId());
@@ -87,14 +91,10 @@ public class ApplyBaitsGui extends ConfigGui {
                 return;
             }
 
-            if (result == null || result.getFishingRod() == null) {
-                continue;
-            }
-
             // Remove the bait items from the inventory.
             this.baitInventory.remove(item);
             // Set the handItem variable.
-            handItem = result.getFishingRod();
+            handItem = result.fishingRod();
             changedRod = true;
         }
 

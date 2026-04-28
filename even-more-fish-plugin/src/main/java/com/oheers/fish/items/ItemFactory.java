@@ -3,24 +3,17 @@ package com.oheers.fish.items;
 import com.oheers.fish.EvenMoreFish;
 import com.oheers.fish.FishUtils;
 import com.oheers.fish.api.config.ConfigUtils;
-import com.oheers.fish.items.configs.CustomModelDataItemConfig;
-import com.oheers.fish.items.configs.DisplayNameItemConfig;
-import com.oheers.fish.items.configs.DyeColourItemConfig;
-import com.oheers.fish.items.configs.EnchantmentsItemConfig;
-import com.oheers.fish.items.configs.GlowingItemConfig;
 import com.oheers.fish.items.configs.ItemConfig;
-import com.oheers.fish.items.configs.ItemDamageItemConfig;
-import com.oheers.fish.items.configs.LoreItemConfig;
-import com.oheers.fish.items.configs.PotionMetaItemConfig;
-import com.oheers.fish.items.configs.QuantityItemConfig;
-import com.oheers.fish.items.configs.UnbreakableItemConfig;
 import com.oheers.fish.utils.ItemUtils;
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.NbtApiException;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
+import me.arcaniax.hdb.api.HeadDatabaseAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -44,7 +37,7 @@ public class ItemFactory {
     private Consumer<ItemStack> finalChanges = null;
     private @NotNull ItemStack baseItem;
 
-    private final ItemConfig<Float> customModelData;
+    private final ItemConfig<Number> customModelData;
     private final ItemConfig<Integer> itemDamage;
     private final ItemConfig<String> displayName;
     private final ItemConfig<Color> dyeColour;
@@ -58,6 +51,7 @@ public class ItemFactory {
     private final ItemConfig<Boolean> fireResistant;
     private final ItemConfig<Boolean> hideTooltip;
     private final ItemConfig<String> itemRarity;
+    private final ItemConfig<NamespacedKey> tooltipStyle;
 
     private ItemFactory(@NotNull Section initialSection, @Nullable String configLocation) {
         if (configLocation == null) {
@@ -85,6 +79,7 @@ public class ItemFactory {
         this.fireResistant = resolver.getFireResistant(this.configuration);
         this.hideTooltip = resolver.getHideTooltip(this.configuration);
         this.itemRarity = resolver.getItemRarity(this.configuration);
+        this.tooltipStyle = resolver.getTooltipStyle(this.configuration);
 
         this.baseItem = getBaseItem();
     }
@@ -116,20 +111,22 @@ public class ItemFactory {
         ItemStack item = baseItem.clone();
 
         if (!rawItem) {
-            customModelData.apply(item, replacements);
-            itemDamage.apply(item, replacements);
-            displayName.apply(item, replacements);
-            dyeColour.apply(item, replacements);
-            glowing.apply(item, replacements);
-            lore.apply(item, replacements);
-            potionMeta.apply(item, replacements);
-            enchantments.apply(item, replacements);
-            unbreakable.apply(item, replacements);
-            quantity.apply(item, replacements);
-            itemModel.apply(item, replacements);
-            fireResistant.apply(item, replacements);
-            hideTooltip.apply(item, replacements);
-            itemRarity.apply(item, replacements);
+            OfflinePlayer player = relevantPlayer == null ? null : Bukkit.getOfflinePlayer(relevantPlayer);
+            customModelData.apply(item, player, replacements);
+            itemDamage.apply(item, player, replacements);
+            displayName.apply(item, player, replacements);
+            dyeColour.apply(item, player, replacements);
+            glowing.apply(item, player, replacements);
+            lore.apply(item, player, replacements);
+            potionMeta.apply(item, player, replacements);
+            enchantments.apply(item, player, replacements);
+            unbreakable.apply(item, player, replacements);
+            quantity.apply(item, player, replacements);
+            itemModel.apply(item, player, replacements);
+            fireResistant.apply(item, player, replacements);
+            hideTooltip.apply(item, player, replacements);
+            itemRarity.apply(item, player, replacements);
+            tooltipStyle.apply(item, player, replacements);
 
             if (finalChanges != null) {
                 finalChanges.accept(item);
@@ -171,6 +168,12 @@ public class ItemFactory {
         ItemStack randomMaterial = checkRandomMaterial();
         if (randomMaterial != null) {
             return randomMaterial;
+        }
+        // item.raw-materials
+        ItemStack randomRawMaterial = checkRandomRawMaterial();
+        if (randomRawMaterial != null) {
+            rawItem = true;
+            return randomRawMaterial;
         }
         // item.headdb
         ItemStack headDB = checkHeadDB();
@@ -215,7 +218,7 @@ public class ItemFactory {
 
     // Customization Methods //
 
-    public ItemConfig<Float> getCustomModelData() {
+    public ItemConfig<Number> getCustomModelData() {
         return customModelData;
     }
 
@@ -271,6 +274,10 @@ public class ItemFactory {
         return itemRarity;
     }
 
+    public ItemConfig<NamespacedKey> getTooltipStyle() {
+        return tooltipStyle;
+    }
+
     // Base Item Methods //
 
     // Raw NBT
@@ -321,7 +328,7 @@ public class ItemFactory {
         }
         // If there's only one material, skip randomization
         if (materialStrs.size() == 1) {
-            return getItemFromMaterialString(materialStrs.get(0));
+            return getItemFromMaterialString(materialStrs.getFirst());
         }
         return getRandomItem(materialStrs, this::getItemFromMaterialString);
     }
@@ -334,6 +341,18 @@ public class ItemFactory {
         return getItemFromMaterialString(materialStr);
     }
 
+    private @Nullable ItemStack checkRandomRawMaterial() {
+        ArrayList<String> materialStrs = new ArrayList<>(configuration.getStringList("item.raw-materials"));
+        if (materialStrs.isEmpty()) {
+            return null;
+        }
+        // If there's only one material, skip randomization
+        if (materialStrs.size() == 1) {
+            return getItemFromMaterialString(materialStrs.getFirst());
+        }
+        return getRandomItem(materialStrs, this::getItemFromMaterialString);
+    }
+
     // HeadDB
 
     private @Nullable ItemStack checkHeadDB() {
@@ -344,7 +363,11 @@ public class ItemFactory {
         if (materialStr == null) {
             return null;
         }
-        ItemStack item = EvenMoreFish.getInstance().getDependencyManager().getHdbapi().getItemHead(materialStr);
+        HeadDatabaseAPI api = EvenMoreFish.getInstance().getDependencyManager().getHdbapi();
+        if (api == null) {
+            return null;
+        }
+        ItemStack item = api.getItemHead(materialStr);
         if (item == null) {
             EvenMoreFish.getInstance().debug(configuration.getRouteAsString() + " has invalid headdb: " + materialStr);
             return null;
@@ -360,10 +383,14 @@ public class ItemFactory {
         if (materialStrs.isEmpty()) {
             return null;
         }
-        if (materialStrs.size() == 1) {
-            return EvenMoreFish.getInstance().getDependencyManager().getHdbapi().getItemHead(materialStrs.get(0));
+        HeadDatabaseAPI api = EvenMoreFish.getInstance().getDependencyManager().getHdbapi();
+        if (api == null) {
+            return null;
         }
-        return getRandomItem(materialStrs, EvenMoreFish.getInstance().getDependencyManager().getHdbapi()::getItemHead);
+        if (materialStrs.size() == 1) {
+            return api.getItemHead(materialStrs.getFirst());
+        }
+        return getRandomItem(materialStrs, api::getItemHead);
     }
 
     // Head 64
@@ -382,7 +409,7 @@ public class ItemFactory {
             return null;
         }
         if (materialStrs.size() == 1) {
-            return FishUtils.getSkullFromBase64(materialStrs.get(0));
+            return FishUtils.getSkullFromBase64(materialStrs.getFirst());
         }
         return getRandomItem(materialStrs, FishUtils::getSkullFromBase64);
     }
@@ -403,7 +430,7 @@ public class ItemFactory {
             return null;
         }
         if (materialStrs.size() == 1) {
-            return FishUtils.getSkullFromUUIDString(materialStrs.get(0));
+            return FishUtils.getSkullFromUUIDString(materialStrs.getFirst());
         }
         return getRandomItem(materialStrs, FishUtils::getSkullFromUUIDString);
     }

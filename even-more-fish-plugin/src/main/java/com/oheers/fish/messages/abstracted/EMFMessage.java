@@ -1,6 +1,9 @@
 package com.oheers.fish.messages.abstracted;
 
 import com.oheers.fish.FishUtils;
+import com.oheers.fish.baits.BaitHandler;
+import com.oheers.fish.fishing.Processor;
+import com.oheers.fish.fishing.items.Fish;
 import com.oheers.fish.messages.EMFListMessage;
 import com.oheers.fish.messages.EMFSingleMessage;
 import net.kyori.adventure.audience.Audience;
@@ -8,6 +11,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import uk.firedev.messagelib.message.ComponentListMessage;
@@ -19,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public abstract class EMFMessage {
 
@@ -123,7 +128,10 @@ public abstract class EMFMessage {
      * Sets the relevant player for this message. If the relevant player exists, per-player placeholders will NOT be parsed.
      * @param relevantPlayer The relevant player for this message
      */
-    public final void setRelevantPlayer(@NotNull OfflinePlayer relevantPlayer) {
+    public final void setRelevantPlayer(@Nullable OfflinePlayer relevantPlayer) {
+        if (relevantPlayer == null) {
+            return;
+        }
         this.relevantPlayer = relevantPlayer;
     }
 
@@ -245,7 +253,7 @@ public abstract class EMFMessage {
             return;
         }
         this.relevantPlayer = player;
-        setVariable("{player}", Objects.requireNonNullElse(player.getName(), "N/A"));
+        setVariable("{player}", Optional.ofNullable(player.getName()).orElse("N/A"));
     }
 
     /**
@@ -255,6 +263,19 @@ public abstract class EMFMessage {
      */
     public void setLength(@NotNull final Object length) {
         setVariable("{length}", length);
+    }
+
+    /**
+     * Sets all relevant variables for the fish caught message.
+     * Performs {@link #setLength(Object)}, {@link #setFishCaught(Object)}, and {@link #setRarity(Object)}.
+     * @param fish The fish that was caught.
+     */
+    public void setFishCatchVariables(@NotNull Fish fish) {
+        setLength(Processor.LENGTH_FORMAT.format(fish.getLength()));
+        setRarity(fish.getRarity().getDisplayName());
+
+        Component display = fish.getDisplayName().getComponentMessage().hoverEvent(fish.give());
+        setFishCaught(display);
     }
 
     /**
@@ -319,6 +340,29 @@ public abstract class EMFMessage {
      */
     public void setTimeRaw(@NotNull final Object timeRaw) {
         setVariable("{time_raw}", timeRaw);
+    }
+
+    /**
+     * Sets the bait in the message to replace the {bait} variable.
+     *
+     * @param bait The bait.
+     * @param baitItem The item to show when hovering over the variable.
+     */
+    public void setBait(@NotNull final BaitHandler bait, @Nullable final ItemStack baitItem) {
+        setVariable("{bait_theme}", "");
+
+        Component display = bait.format(bait.getDisplayName()).getComponentMessage().hoverEvent(baitItem);
+        setVariable("{bait}", display);
+    }
+
+    /**
+     * Sets the bait in the message to replace the {bait} variable.
+     *
+     * @param bait The bait.
+     */
+    public void setBait(@NotNull final BaitHandler bait) {
+        setVariable("{bait_theme}", "");
+        setVariable("{bait}", bait.format(bait.getDisplayName()));
     }
 
     /**

@@ -2,18 +2,23 @@ package com.oheers.fish.events;
 
 import com.gmail.nossr50.events.McMMOReplaceVanillaTreasureEvent;
 import com.gmail.nossr50.events.skills.fishing.McMMOPlayerFishingTreasureEvent;
+import com.oheers.fish.Checks;
+import com.oheers.fish.EvenMoreFish;
+import com.oheers.fish.Toggle;
 import com.oheers.fish.competition.Competition;
 import com.oheers.fish.config.MainConfig;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 public class McMMOTreasureEvent implements Listener {
 
     private static final McMMOTreasureEvent mcmmoEvent = new McMMOTreasureEvent();
 
-    private McMMOTreasureEvent() {
-
-    }
+    private McMMOTreasureEvent() {}
 
     public static McMMOTreasureEvent getInstance() {
         return mcmmoEvent;
@@ -21,27 +26,38 @@ public class McMMOTreasureEvent implements Listener {
 
     @EventHandler
     public void mcmmoTreasure(McMMOReplaceVanillaTreasureEvent event) {
-        if (MainConfig.getInstance().disableMcMMOTreasure()) {
-            if (MainConfig.getInstance().isFishCatchOnlyInCompetition()) {
-                if (Competition.isActive()) {
-                    event.setReplacementItemStack(event.getOriginalItem().getItemStack());
-                }
-            } else {
-                event.setReplacementItemStack(event.getOriginalItem().getItemStack());
-            }
+        if (!MainConfig.getInstance().disableMcMMOTreasure()) {
+            return;
         }
+        Toggle toggle = EvenMoreFish.getInstance().getToggle();
+        Player causingPlayer = event.getCausingPlayer();
+        if (causingPlayer != null && toggle.isCustomFishingDisabled(causingPlayer)) {
+            return;
+        }
+        if (MainConfig.getInstance().isFishCatchOnlyInCompetition() && !Competition.isActive()) {
+            return;
+        }
+        event.setReplacementItemStack(event.getOriginalItem().getItemStack());
     }
 
     @EventHandler
     public void mcmmoTreasure(McMMOPlayerFishingTreasureEvent event) {
-        if (MainConfig.getInstance().disableMcMMOTreasure()) {
-            if (MainConfig.getInstance().isFishCatchOnlyInCompetition()) {
-                if (Competition.isActive()) {
-                    event.setTreasure(null);
-                }
-            } else {
-                event.setTreasure(null);
-            }
+        if (!MainConfig.getInstance().disableMcMMOTreasure()) {
+            return;
         }
+        PlayerInventory inventory = event.getPlayer().getInventory();
+        ItemStack main = inventory.getItemInMainHand();
+        ItemStack off = inventory.getItemInOffHand();
+        if (!Checks.canUseRod(main) && !Checks.canUseRod(off)) {
+            return;
+        }
+        Toggle toggle = EvenMoreFish.getInstance().getToggle();
+        if (toggle.isCustomFishingDisabled(event.getPlayer())) {
+            return;
+        }
+        if (MainConfig.getInstance().isFishCatchOnlyInCompetition() && !Competition.isActive()) {
+            return;
+        }
+        event.setTreasure(null);
     }
 }

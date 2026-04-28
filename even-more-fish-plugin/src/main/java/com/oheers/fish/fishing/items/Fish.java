@@ -3,18 +3,19 @@ package com.oheers.fish.fishing.items;
 import com.oheers.fish.EvenMoreFish;
 import com.oheers.fish.FishUtils;
 import com.oheers.fish.api.Logging;
+import com.oheers.fish.api.config.ConfigUtils;
+import com.oheers.fish.api.fishing.CatchType;
 import com.oheers.fish.api.fishing.items.IFish;
 import com.oheers.fish.api.requirement.Requirement;
 import com.oheers.fish.api.reward.Reward;
-import com.oheers.fish.api.config.ConfigUtils;
 import com.oheers.fish.exceptions.InvalidFishException;
-import com.oheers.fish.api.fishing.CatchType;
 import com.oheers.fish.items.ItemFactory;
 import com.oheers.fish.messages.ConfigMessage;
 import com.oheers.fish.messages.EMFListMessage;
 import com.oheers.fish.messages.EMFSingleMessage;
 import com.oheers.fish.messages.abstracted.EMFMessage;
 import com.oheers.fish.selling.WorthNBT;
+import com.oheers.fish.utils.sort.Sortable;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -23,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,15 +31,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.logging.Level;
 
-public class Fish implements IFish {
+public class Fish implements IFish, Sortable {
 
     private final @NotNull Section section;
     private final String name;
     private final Rarity rarity;
     private final ItemFactory factory;
-    private UUID fisherman;
+    private @Nullable OfflinePlayer fisherman;
     private float length;
 
     private @Nullable List<Reward> actionRewards = null;
@@ -154,11 +153,14 @@ public class Fish implements IFish {
      */
     @Override
     public @NotNull ItemStack give() {
-        return factory.createItem(fisherman);
+        if (fisherman == null) {
+            return factory.createItem();
+        }
+        return factory.createItem(fisherman.getUniqueId());
     }
 
-    private OfflinePlayer getFishermanPlayer() {
-        return fisherman == null ? null : Bukkit.getOfflinePlayer(fisherman);
+    private @Nullable OfflinePlayer getFishermanPlayer() {
+        return fisherman;
     }
 
     private void setSize() {
@@ -240,7 +242,7 @@ public class Fish implements IFish {
         if (fisherman == null) {
             return;
         }
-        Player player = Bukkit.getPlayer(fisherman);
+        Player player = fisherman.getPlayer();
         if (player != null) {
             EMFSingleMessage.fromString(msg).send(player);
         }
@@ -259,7 +261,7 @@ public class Fish implements IFish {
             return;
         }
         // Check if the requested player is null
-        Player player = Bukkit.getPlayer(this.fisherman);
+        Player player = this.fisherman.getPlayer();
         if (player == null) {
             return;
         }
@@ -281,6 +283,10 @@ public class Fish implements IFish {
         checkEffects();
     }
 
+    private List<String> getLoreOverride() {
+        return section.getStringList("lore-override", rarity.getLoreOverride());
+    }
+
     /**
      * From the new method of fetching the lore, where the admin specifies exactly how they want the lore to be set up,
      * letting them modify the order, add a twist to how they want extra details and so on.
@@ -291,7 +297,7 @@ public class Fish implements IFish {
      * @return A lore to be used by fetching data from the old messages.yml set-up.
      */
     private List<Component> getFishLore() {
-        List<String> loreOverride = section.getStringList("lore-override");
+        List<String> loreOverride = getLoreOverride();
         EMFListMessage newLoreLine;
         if (!loreOverride.isEmpty()) {
             newLoreLine = EMFListMessage.fromStringList(loreOverride);
@@ -307,26 +313,22 @@ public class Fish implements IFish {
 
         if (!disableFisherman && fishermanPlayer != null) {
             EMFMessage message = ConfigMessage.FISHERMAN_LORE.getMessage();
-            message.setRelevantPlayer(fishermanPlayer);
-            newLoreLine.setVariableWithListInsertion("{fisherman_lore}", message.toListMessage());
+            newLoreLine.setVariableWithListInsertion("{fisherman_lore}", message.toListMessage().getUnderlying());
         } else {
             newLoreLine.setVariableWithListInsertion("{fisherman_lore}", EMFListMessage.empty());
         }
 
         if (length > 0) {
             newLoreLine.setVariableWithListInsertion("{length_lore}", ConfigMessage.LENGTH_LORE.getMessage().toListMessage());
-            newLoreLine.setLength(Float.toString(length));
         } else {
             newLoreLine.setVariableWithListInsertion("{length_lore}", EMFListMessage.empty());
         }
 
+        newLoreLine.setRelevantPlayer(fishermanPlayer);
+        newLoreLine.setLength(length);
         newLoreLine.setRarity(this.rarity.getLorePrep());
 
-        if (disableFisherman || fishermanPlayer == null) {
-            return newLoreLine.getComponentListMessage();
-        } else {
-            return newLoreLine.getComponentListMessage(fishermanPlayer);
-        }
+        return newLoreLine.getComponentListMessage();
     }
 
     private void checkEatEvent() {
@@ -413,12 +415,17 @@ public class Fish implements IFish {
     }
 
     @Override
-    public @Nullable UUID getFisherman() {
-        return fisherman;
+    public @Nullable UUID getFishermanUUID() {
+        return fisherman == null ? null : fisherman.getUniqueId();
     }
 
     @Override
-    public void setFisherman(@Nullable UUID fisherman) {
+    public void setFisherman(@Nullable UUID uuid) {
+        this.fisherman = uuid == null ? null : Bukkit.getOfflinePlayer(uuid);
+    }
+
+    @Override
+    public void setFisherman(@Nullable OfflinePlayer fisherman) {
         this.fisherman = fisherman;
     }
 
@@ -479,6 +486,11 @@ public class Fish implements IFish {
     @Override
     public double getWeight() {
         return weight;
+    }
+
+    @Override
+    public @NotNull String getId() {
+        return this.name;
     }
 
     @Override
