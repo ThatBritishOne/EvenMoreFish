@@ -143,6 +143,7 @@ help-admin:
   addons: "[noPrefix]모든 애드온을 표시합니다."
   version: "[noPrefix]플러그인 정보를 표시합니다."
   rawitem: "[noPrefix]주로 사용하는 손에 있는 아이템의 생 NBT를 표시합니다."
+  database: "[noPrefix]Manage the plugin's database."
 # Shown when the %emf_competition_place_player_*% placeholder requests a position in the leaderboard that doesn't exist
 no-player-in-place: <white>이 자리를 차지하기 위해 낚시를 시작하세요
 # Shown when the %emf_competition_place_fish_*% placeholder requests a position in the leaderboard that doesn't exist
@@ -155,6 +156,8 @@ no-competition-running: <white>개최된 대회가 없습니다.
 no-competition-running-fish: <white>개최된 대회가 없습니다.
 # Shown when the %emf_competition_place_size_*% placeholder is used when there's no competition running
 no-competition-running-size: <white>개최된 대회가 없습니다.
+# Shown in %emf_competition_time_left% when there are no scheduled competitions.
+no-competitions-scheduled: <white>No competitions are scheduled.
 # Broadcasted to all players when a competition is extended.
 competition-time-extended: <white>진행 중인 대회가 {duration}만큼 연장되었습니다!
 # How should %emf_custom_fishing_status% be formatted?
@@ -246,6 +249,9 @@ admin:
 rarity-invalid: <white>유효한 등급이 아닙니다!
 # When the player can't access the Fishing Journal
 journal-disabled: <white>낚시 일지에 접근할 수 없습니다. 플러그인 데이터베이스에서 켜주세요.
+# Reward messages
+reward:
+  catch-up: <white>You received rewards while you were offline. Delivering them now.
 # Bait messages
 bait:
   # How the lore should look ({baits} is a multi-line variable)
@@ -278,4 +284,4 @@ bait:
   unused-slot: <gray>► ? <i>가능한 슬롯
 # ATTENTION ATTENTION ATTENTION
 # DO NOT EDIT THIS VALUE OR THINGS WILL BREAK!!!
-version: 10
+version: 13

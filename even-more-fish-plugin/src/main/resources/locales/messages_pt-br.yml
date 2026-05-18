@@ -143,6 +143,7 @@ help-admin:
   addons: "[noPrefix]Exibe todos os addons."
   version: "[noPrefix]Exibe informações do plugin."
   rawitem: "[noPrefix]Displays the item in your main hand as raw NBT."
+  database: "[noPrefix]Manage the plugin's database."
 # Shown when the %emf_competition_place_player_*% placeholder requests a position in the leaderboard that doesn't exist
 no-player-in-place: <white>Start fishing to take this place
 # Shown when the %emf_competition_place_fish_*% placeholder requests a position in the leaderboard that doesn't exist
@@ -155,6 +156,8 @@ no-competition-running: <white>No competition running right now.
 no-competition-running-fish: <white>No competition running right now.
 # Shown when the %emf_competition_place_size_*% placeholder is used when there's no competition running
 no-competition-running-size: <white>No competition running right now.
+# Shown in %emf_competition_time_left% when there are no scheduled competitions.
+no-competitions-scheduled: <white>No competitions are scheduled.
 # Broadcasted to all players when a competition is extended.
 competition-time-extended: <white>The active competition has been extended by {duration}!
 # How should %emf_custom_fishing_status% be formatted?
@@ -246,6 +249,9 @@ admin:
 rarity-invalid: <white>That is not a valid rarity!
 # When the player can't access the Fishing Journal
 journal-disabled: <white>The Fishing Journal is not accessible. Please enable the plugin's database.
+# Reward messages
+reward:
+  catch-up: <white>You received rewards while you were offline. Delivering them now.
 # Bait messages
 bait:
   # How the lore should look ({baits} is a multi-line variable)
@@ -278,4 +284,4 @@ bait:
   unused-slot: <gray>► ? <i>Available Slot
 # ATTENTION ATTENTION ATTENTION
 # DO NOT EDIT THIS VALUE OR THINGS WILL BREAK!!!
-version: 10
+version: 13

@@ -129,6 +129,7 @@ public enum ConfigMessage {
     HELP_ADMIN_MIGRATE(PrefixType.ADMIN, "help-admin.migrate"),
     HELP_ADMIN_ADDONS(PrefixType.ADMIN, "help-admin.addons"),
     HELP_ADMIN_RAWITEM(PrefixType.ADMIN, "help-admin.rawitem"),
+    HELP_ADMIN_DATABASE(PrefixType.ADMIN, "help-admin.database"),
     HELP_LIST_FISH(PrefixType.ADMIN, "help-list.fish"),
     HELP_LIST_RARITIES(PrefixType.ADMIN, "help-list.rarities"),
     HELP_COMPETITION_START(PrefixType.ADMIN, "help-competition.start"),
@@ -171,6 +172,7 @@ public enum ConfigMessage {
     PLACEHOLDER_NO_COMPETITION_RUNNING(PrefixType.NONE, "no-competition-running"),
     PLACEHOLDER_NO_COMPETITION_RUNNING_FISH(PrefixType.NONE, "no-competition-running-fish"),
     PLACEHOLDER_NO_COMPETITION_RUNNING_SIZE(PrefixType.NONE, "no-competition-running-size"),
+    PLACEHOLDER_NO_COMPETITIONS_SCHEDULED(PrefixType.NONE, "no-competitions-scheduled"),
 
     PLACEHOLDER_NO_PLAYER_IN_PLACE(PrefixType.NONE, "no-player-in-place"),
     PLACEHOLDER_NO_FISH_IN_PLACE(PrefixType.NONE, "no-fish-in-place"),
@@ -200,6 +202,7 @@ public enum ConfigMessage {
     WORTH_GUI_SELL_LORE(PrefixType.NONE, "sell-gui-lore"),
     RARITY_INVALID(PrefixType.ERROR, "rarity-invalid"),
     JOURNAL_DISABLED(PrefixType.ERROR, "journal-disabled"),
+    REWARD_CATCHUP(PrefixType.DEFAULT, "reward.catch-up"),
     BAIT_ROD_LORE(PrefixType.NONE, "bait.rod-lore"),
     BAIT_BAIT_LORE(PrefixType.NONE, "bait.bait-lore"),
     BAIT_BAITS(PrefixType.NONE, "bait.baits"),

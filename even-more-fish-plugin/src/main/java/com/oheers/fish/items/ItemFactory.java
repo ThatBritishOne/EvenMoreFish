@@ -60,7 +60,8 @@ public class ItemFactory {
             this.configuration = ConfigUtils.getOrCreateSection(initialSection, configLocation);
         }
 
-        // Updates the configuration to put everything in the correct place
+        // Internally updates the configuration to put everything in the correct place.
+        // As of 2.3.1, this no longer overwrites the file to avoid conflicting with fish display names.
         new ItemFactoryConversion().performConversions(this.configuration);
 
         ItemConfigResolver resolver = ItemConfigResolver.getInstance();
@@ -82,6 +83,14 @@ public class ItemFactory {
         this.tooltipStyle = resolver.getTooltipStyle(this.configuration);
 
         this.baseItem = getBaseItem();
+    }
+
+    public ItemFactory createCopy() {
+        ItemFactory newFactory = new ItemFactory(this.configuration, null);
+        newFactory.relevantPlayer = this.relevantPlayer;
+        newFactory.randomIndex = this.randomIndex;
+        newFactory.finalChanges = this.finalChanges;
+        return newFactory;
     }
 
     /**
@@ -304,8 +313,10 @@ public class ItemFactory {
         }
         EvenMoreFish.getInstance().debug(materialString + " is not a valid material, checking for custom item.");
 
-        ItemStack customItem = FishUtils.getItem(materialString);
+        ItemStack customItem = FishUtils.getCustomItem(materialString);
         if (customItem != null) {
+            this.lore.setEnabled(false);
+            this.displayName.setEnabled(false);
             return customItem;
         }
 

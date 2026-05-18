@@ -11,13 +11,14 @@ import org.jdbi.v3.core.HandleConsumer;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.Update;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Answers;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.io.File;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -88,19 +89,21 @@ class DatabaseTest {
         LocalDateTime startTime = LocalDateTime.of(2026, 4, 17, 9, 30, 0);
         Competition competition = new TestCompetition("spring-classic", startTime);
 
-        LocalDateTime before = LocalDateTime.now();
+        Timestamp startTimestamp = Timestamp.valueOf(startTime);
+
+        Timestamp before = Timestamp.valueOf(LocalDateTime.now());
         database.createCompetitionReport(competition);
-        LocalDateTime after = LocalDateTime.now();
+        Timestamp after = Timestamp.valueOf(LocalDateTime.now());
 
-        verify(update).bind("start_time", startTime);
+        verify(update).bind("start_time", startTimestamp);
 
-        ArgumentCaptor<LocalDateTime> endTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        ArgumentCaptor<Timestamp> endTimeCaptor = ArgumentCaptor.forClass(Timestamp.class);
         verify(update).bind(eq("end_time"), endTimeCaptor.capture());
 
-        LocalDateTime endTime = endTimeCaptor.getValue();
-        assertFalse(endTime.isBefore(before));
-        assertFalse(endTime.isAfter(after));
-        assertTrue(endTime.isAfter(startTime));
+        Timestamp endTime = endTimeCaptor.getValue();
+        assertFalse(endTime.before(before));
+        assertFalse(endTime.after(after));
+        assertTrue(endTime.after(startTimestamp));
     }
 
     private static UserReport createUserReport() {
@@ -200,12 +203,12 @@ class DatabaseTest {
         }
 
         @Override
-        public ItemStack getSkullFromUUID(UUID uuid) {
+        public @NonNull ItemStack getSkullFromUUID(@NonNull UUID uuid) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public ItemStack getSkullFromBase64(String base64) {
+        public @NonNull ItemStack getSkullFromBase64(@NonNull String base64) {
             throw new UnsupportedOperationException();
         }
     }

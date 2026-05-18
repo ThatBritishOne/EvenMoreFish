@@ -143,6 +143,7 @@ help-admin:
   addons: "[noPrefix]顯示所有外掛。"
   version: "[noPrefix]顯示外掛資訊。"
   rawitem: "[noPrefix]以原始 NBT 顯示你主手中的物品。"
+  database: "[noPrefix]Manage the plugin's database."
 # Shown when the %emf_competition_place_player_*% placeholder requests a position in the leaderboard that doesn't exist
 no-player-in-place: <white>Start fishing to take this place
 # Shown when the %emf_competition_place_fish_*% placeholder requests a position in the leaderboard that doesn't exist
@@ -155,6 +156,8 @@ no-competition-running: <white>No competition running right now.
 no-competition-running-fish: <white>No competition running right now.
 # Shown when the %emf_competition_place_size_*% placeholder is used when there's no competition running
 no-competition-running-size: <white>No competition running right now.
+# Shown in %emf_competition_time_left% when there are no scheduled competitions.
+no-competitions-scheduled: <white>No competitions are scheduled.
 # Broadcasted to all players when a competition is extended.
 competition-time-extended: <white>目前進行中的比賽已延長 {duration}！
 # How should %emf_custom_fishing_status% be formatted?
@@ -246,6 +249,9 @@ admin:
 rarity-invalid: <white>那不是有效的稀有度！
 # When the player can't access the Fishing Journal
 journal-disabled: <white>釣魚記錄無法存取。請啟用外掛的資料庫。
+# Reward messages
+reward:
+  catch-up: <white>You received rewards while you were offline. Delivering them now.
 # Bait messages
 bait:
   # How the lore should look ({baits} is a multi-line variable)
@@ -278,4 +284,4 @@ bait:
   unused-slot: <gray>► ? <i>可用欄位
 # ATTENTION ATTENTION ATTENTION
 # DO NOT EDIT THIS VALUE OR THINGS WILL BREAK!!!
-version: 10
+version: 13

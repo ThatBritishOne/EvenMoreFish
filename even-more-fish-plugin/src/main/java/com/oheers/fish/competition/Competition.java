@@ -21,6 +21,7 @@ import com.oheers.fish.messages.ConfigMessage;
 import com.oheers.fish.messages.EMFListMessage;
 import com.oheers.fish.messages.EMFSingleMessage;
 import com.oheers.fish.messages.abstracted.EMFMessage;
+import com.oheers.fish.utils.TimeCode;
 import dev.dejvokep.boostedyaml.YamlDocument;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
 import net.kyori.adventure.sound.Sound;
@@ -71,6 +72,7 @@ public class Competition {
     private int playersNeeded;
     private Sound.Type startSound;
     private CompetitionTimer timingSystem;
+    private CompetitionBackupTimer backupSystem;
     private CompetitionFile competitionFile;
     private int numberNeeded = 0;
     private Player singleWinner = null;
@@ -221,13 +223,16 @@ public class Competition {
         end(startFail, false);
     }
 
-    public void end(boolean startFail, boolean pluginDisable) {
+    public void end(boolean startFail, boolean save) {
         if (ended()) {
             return;
         }
         // Print leaderboard
         if (timingSystem != null) {
             timingSystem.stop();
+        }
+        if (backupSystem != null) {
+            backupSystem.stop();
         }
         if (statusBar != null) {
             statusBar.hide();
@@ -238,12 +243,14 @@ public class Competition {
             return;
         }
 
-        if (pluginDisable && MainConfig.getInstance().shouldCompetitionResume()) {
+        if (save && MainConfig.getInstance().shouldCompetitionResume()) {
             saveToFile();
             return;
         }
 
         try {
+            // Delete the backup file in case it still exists for whatever reason.
+            dataFile.delete();
             fireEndEvent();
             notifyPlayers();
             processRewards();
@@ -309,6 +316,13 @@ public class Competition {
         CompetitionTimer timer = new CompetitionTimer(this);
         timer.start();
         this.timingSystem = timer;
+
+        // Also init the backup timer if enabled.
+        if (MainConfig.getInstance().isCompetitionBackupEnabled()) {
+            CompetitionBackupTimer backupTimer = new CompetitionBackupTimer(this);
+            backupTimer.start();
+            this.backupSystem = backupTimer;
+        }
     }
 
     /**
@@ -486,13 +500,7 @@ public class Competition {
         }
 
         for (CompetitionEntry entry : entries) {
-            Player player = Bukkit.getPlayer(entry.getPlayer());
-
-            // If the player is null, increment the place and continue
-            if (player == null) {
-                rewardPlace++;
-                continue;
-            }
+            OfflinePlayer player = Bukkit.getOfflinePlayer(entry.getPlayer());
 
             // Does the player's place have reward?
             if (rewards.containsKey(rewardPlace)) {
@@ -571,6 +579,9 @@ public class Competition {
         }
 
         long remainingTime = getRemainingTime();
+        if (remainingTime == -1) {
+            return ConfigMessage.PLACEHOLDER_NO_COMPETITIONS_SCHEDULED.getMessage();
+        }
 
         EMFMessage message = ConfigMessage.PLACEHOLDER_TIME_REMAINING_INACTIVE.getMessage();
         message.setDays(Long.toString(remainingTime / 1440));
@@ -581,7 +592,11 @@ public class Competition {
     }
 
     private static long getRemainingTime() {
-        long startTime = EvenMoreFish.getInstance().getCompetitionQueue().getNextCompetition().toMillis();
+        TimeCode next = EvenMoreFish.getInstance().getCompetitionQueue().getNextCompetition();
+        if (next == null) {
+            return -1L;
+        }
+        long startTime = next.toMillis();
         long currentTime = System.currentTimeMillis();
         return Duration.ofMillis(startTime - currentTime).toMinutes();
     }
